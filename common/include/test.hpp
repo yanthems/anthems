@@ -8,6 +8,15 @@
 
 namespace anthems {
 
+class bytes :public std::vector<unsigned char> {
+    using super = std::vector<unsigned char>;
+public:
+    bytes(const std::string&str);
+    bytes(const char*str);
+    bytes(std::size_t t);
+    bytes& operator+=(const bytes&data);
+};
+
 template<typename T>
 inline void log(T&& t) {
     std::cout << std::forward<T>(t) << std::endl;
@@ -17,8 +26,6 @@ inline void log(T&& t, Args&&... args) {
     std::cout << std::forward<T>(t) << ' ';
     anthems::log(std::forward<Args>(args)...);
 }
-
-using bytes = std::vector<unsigned char>;
 
 class cipher {
 private:
