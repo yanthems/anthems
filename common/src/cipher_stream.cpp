@@ -54,6 +54,6 @@ void aes_cipher::init_decrypt(const bytes& iv) {
 
 cipher_stream* aes_cipher::copy() {
     auto ptr = new aes_cipher(*this);
-    return ptr;
+    return dynamic_cast<cipher_stream*>(ptr);
 }
 }

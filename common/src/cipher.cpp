@@ -41,17 +41,12 @@ cipher::~cipher() {
 }
 
 cipher::cipher(const cipher & other) {
-    return other.copy();
+    this->method = this->method->copy();
 }
 
-cipher cipher::operator=(const cipher & other) {
-    return other.copy();
-}
-
- cipher cipher::copy() {
-    cipher res;
-    res.method = this->method->copy();
-    return res;
+cipher& cipher::operator=(const cipher & other) {
+    this->method = this->method->copy();
+    return *this;
 }
 
 // test

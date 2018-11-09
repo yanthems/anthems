@@ -5,7 +5,6 @@
 
 #include "cipher.hpp"
 #include "asio.hpp"
-#include "asio/ip/tcp.hpp"
 
 namespace anthems {
 

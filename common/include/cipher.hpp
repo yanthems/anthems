@@ -15,8 +15,9 @@ public:
     explicit cipher(const std::string& method, const std::string& password);
     virtual ~cipher();
     cipher(const cipher&other);
-    cipher operator=(const cipher&other);
-    cipher copy();
+    cipher(cipher&&other) = default;
+    cipher& operator=(const cipher&other);
+    cipher& operator=(cipher&&other) = default;
     static bytes evpBytesToKey(std::string password, int kenLen);
     static bytes md5Sum(const bytes& ori);
     static bytes md5Sum(bytes&&ori);
