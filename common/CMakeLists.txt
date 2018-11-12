@@ -1,6 +1,5 @@
-include_directories(SYSTEM ${ASIO_DIR}/include)
-include_directories(BEFORE ${COMMON_DIR}/include)
-
+include_directories(${ASIO_DIR}/include)
+include_directories(${COMMON_DIR}/include)
 
 set(LIBRARY_OUTPUT_PATH ${COMMON_DIR}/lib)
 

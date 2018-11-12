@@ -4,13 +4,13 @@
 #include <string>
 
 #include "cipher.hpp"
-#include "asio.hpp"
 
 namespace anthems {
 
 class ssconn {
 public:
-    ssconn(asio::ip::tcp::socket conn,cipher&& c);
+    ssconn() {};
+    void test();
 };
 }
 #endif // !ANTHEMS_SSCONN_HPP

@@ -6,6 +6,8 @@ set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_STANDARD 14)
 
 ADD_DEFINITIONS(-D ASIO_STANDALONE)
+#ADD_DEFINITIONS(-D ASIO_SEPARATE_COMPILATION)
+
 
 set(COMMON_DIR ${CMAKE_CURRENT_SOURCE_DIR}/common CACHE STRING "common dir")
 set(ASIO_DIR ${CMAKE_CURRENT_SOURCE_DIR}/asio/asio CACHE STRING "asio dir")
@@ -20,3 +22,4 @@ add_subdirectory ("common")
 add_subdirectory ("server")
 
 add_subdirectory ("client")
+

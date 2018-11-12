@@ -1,7 +1,6 @@
 {
   "configurations": [
     {
-      "intelliSenseMode": "linux-gcc-x64",
       "name": "Linux-Debug",
       "generator": "Unix Makefiles",
       "remoteMachineName": "${defaultRemoteMachineName}",
