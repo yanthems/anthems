@@ -7,16 +7,6 @@
 
 namespace anthems {
 
-template<typename T>
-inline void log(T&& t) {
-    std::cout << std::forward<T>(t) << std::endl;
-}
-template<typename T, typename ...Args>
-inline void log(T&& t, Args&&... args) {
-    std::cout << std::forward<T>(t) << ' ';
-    anthems::log(std::forward<Args>(args)...);
-}
-
 using byte = unsigned char;
 const constexpr std::size_t ToEnd = std::size_t(-1);
 

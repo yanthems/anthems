@@ -2,6 +2,8 @@
 
 #include "asio.hpp"
 
+#include "logger.hpp"
+
 namespace anthems {
 
 
