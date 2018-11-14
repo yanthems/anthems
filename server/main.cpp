@@ -10,6 +10,9 @@ int main() {
 
     auto s=anthems::ssserver("23334");
 
-
-    s.run();
+    try {
+        s.run();
+    } catch (const std::exception&e) {
+        anthems::log(e.what());
+    }
 }
