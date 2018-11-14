@@ -9,6 +9,8 @@ cipher_conn::cipher_conn(anthems::ss_conn &&c, const std::string &method, const 
 
 }
 
+
+//anthems::cipher_conn::Block
 void cipher_conn::write(const bytes&data) {
 
     if(!m_cipher.method->is_init_encrypt()){

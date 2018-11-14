@@ -26,6 +26,16 @@ ss_conn tcp_server::accept() {
 
 udp_server::udp_server(const std::string &host, const std::string &port, asio::ip::udp ver) {
 
+    auto m_serv=std::make_shared<asio::io_service>();
+    auto uiport = std::stoi(port);
+
+    auto m_ep=asio::ip::udp::endpoint(ver,uiport);
+
+    asio::ip::udp::resolver res(*m_serv);
+
+    auto rt=res.resolve(m_ep);
+
+
 }
 
 }

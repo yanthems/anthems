@@ -15,10 +15,11 @@ int main() {
         while (true) {
             auto c = s.accept();
 
-            auto cc=anthems::cipher_conn(std::move(c),"aes-128-cfb","foobar");
+            auto cc=anthems::cipher_conn(
+                    std::move(c),"aes-256-cfb","foobar");
 
             auto res = cc.read();
-
+            anthems::log("client say:",res);
             cc.write(res);
         }
     } catch (const std::exception &e) {

@@ -13,17 +13,17 @@ int main() {
 
         auto c = client.connect("127.0.0.1", "23334");
 
-        auto cc=anthems::cipher_conn(std::move(c),"aes-128-cfb","foobar");
+        auto cc=anthems::cipher_conn(
+                std::move(c),"aes-256-cfb","foobar");
 
         anthems::bytes raw(anthems::cipher_conn::Block);
-
-        raw.cover("123123");
+        raw.cover("fuck gfw!");
 
         cc.write(raw);
 
         auto res=cc.read();
 
-        anthems::log(res);
+        anthems::log("server echo:",res);
 
     } catch (std::exception &e) {
         anthems::log(e.what());
