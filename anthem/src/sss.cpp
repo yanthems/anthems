@@ -4,37 +4,28 @@
 
 #include "bytes.hpp"
 #include "logger.hpp"
-namespace anthems{
+#include "ss_conn.hpp"
 
-    ssserver::ssserver(const std::string &port) {
+namespace anthems {
 
-        m_serv=new asio::io_service;
-        m_port=std::stoi(port);
+tcp_server::tcp_server(const std::string &port,asio::ip::tcp ver) {
 
-    }
+    m_serv = std::make_shared<asio::io_service>();
+    auto uiport = std::stoi(port);
+    auto m_ep = tcp_ep_raw(ver, uiport);
+    m_acp = std::make_shared<tcp_acp_raw>(*m_serv, m_ep);
 
-    void ssserver::run() {
-        asio::ip::tcp::endpoint endpoint(asio::ip::tcp::v4(),m_port);
-        asio::ip::tcp::acceptor acceptor(*m_serv,endpoint);
-        try {
-            while (true){
-                auto socket=asio::ip::tcp::socket(*m_serv);
-                acceptor.accept(socket);
+}
 
-                std::async([&](){
-                    //echo
-                    anthems::bytes data(2048);
-                    auto buf=asio::buffer(data);
-                    socket.receive(buf);
-                    anthems::log("server read");
-                    socket.send(buf);
-                });
-            }
-        }catch (std::exception&e){
-            anthems::log(e.what());
-        }
-    }
-    ssserver::~ssserver() {
-        delete m_serv;
-    }
+
+ss_conn tcp_server::accept() {
+    auto conn = ss_conn(*m_serv);
+    m_acp->accept(*conn);
+    return conn;
+}
+
+udp_server::udp_server(const std::string &host, const std::string &port, asio::ip::udp ver) {
+
+}
+
 }

@@ -5,46 +5,54 @@
 #include <map>
 #include <cstring>
 #include <functional>
+#include <functional>
 namespace anthems {
 
-static std::map<std::string, cipher_stream*>cipherMethod = {
-    {
-        "aes-128-cfb",
-        new aes_cipher(16,16),
-    },
-    {
-        "aes-192-cfb",
-        new aes_cipher(24,16),
-    },
-    {
-        "aes-256-cfb",
-        new aes_cipher(32,16),
-    },
+static std::map<std::string,
+        std::function< cipher_stream*(const std::string&)> > cipherMethod = {
+        {
+                "aes-128-cfb",
+                [](const std::string& p) {
+                    return new aes_cipher(cipher::evpBytesToKey(p,16), 16);
+                }
+        },
+        {
+                "aes-192-cfb",
+                [](const std::string& p) {
+                    return new aes_cipher(cipher::evpBytesToKey(p,24), 16);
+                }
+        },
+        {
+                "aes-256-cfb",
+                [](const std::string& p) {
+                    return new aes_cipher(cipher::evpBytesToKey(p,32), 16);
+                }
+        },
 };
 
-cipher::cipher(const std::string& method, const std::string& password) {
-    if (method == "") {
-        throw(std::string("method is null!"));
+cipher::cipher(const std::string &m, const std::string &p) {
+    if (m == "") {
+        throw (std::logic_error("method is null!"));
     }
-    if (password == "") {
-        throw(std::string("password is null!"));
+    if (p == "") {
+        throw (std::logic_error("password is null!"));
     }
-    
-    this->method = dynamic_cast<cipher_stream*>(cipherMethod[method]);
-    if (this->method == nullptr) {
-        throw(std::string("this method is not allowed!"));
+    auto fp=cipherMethod[m];
+    if (fp== nullptr){
+        throw (std::logic_error("this method is not allowed!"));
     }
-    this->method->m_key = evpBytesToKey(password, this->method->keyLen);
+    this->method = fp(p);
 }
+
 cipher::~cipher() {
     delete method;
 }
 
-cipher::cipher(const cipher & other) {
+cipher::cipher(const cipher &other) {
     this->method = this->method->copy();
 }
 
-cipher& cipher::operator=(const cipher & other) {
+cipher &cipher::operator=(const cipher &other) {
     this->method = this->method->copy();
     return *this;
 }
@@ -67,22 +75,25 @@ bytes cipher::evpBytesToKey(std::string password, int kenLen) {
     }
     return m.split(0, kenLen);
 }
-bytes cipher::md5Sum(const bytes& ori) {
-    auto res = bytes(16);
-    MD5(&ori[0], ori.size(), &res[0]);
-    return res;
-}
-bytes cipher::md5Sum(bytes&&ori) {
+
+bytes cipher::md5Sum(const bytes &ori) {
     auto res = bytes(16);
     MD5(&ori[0], ori.size(), &res[0]);
     return res;
 }
 
-bytes cipher::md5Sum(const std::string& str) {
+bytes cipher::md5Sum(bytes &&ori) {
+    auto res = bytes(16);
+    MD5(&ori[0], ori.size(), &res[0]);
+    return res;
+}
+
+bytes cipher::md5Sum(const std::string &str) {
     auto res = bytes(16);
     return md5Sum(bytes(str));
 }
-bytes cipher::md5Sum(std::string&&str) {
+
+bytes cipher::md5Sum(std::string &&str) {
     return md5Sum(bytes(std::forward<std::string>(str)));
 }
 

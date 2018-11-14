@@ -1,28 +1,29 @@
 #ifndef ANTHEMS_SSC_HPP
 #define ANTHEMS_SSC_HPP
 
-#include "asio.hpp"
 #include "bytes.hpp"
 
-namespace anthems{
+#include "ss_conn.hpp"
 
-    class ssclient{
-    public:
+namespace anthems {
 
-        ssclient(const std::string& host,const std::string&port);
-        virtual ~ssclient();
+class tcp_client {
+public:
 
-        std::size_t write(const std::string& msg);
-        std::size_t write(const anthems::bytes& data);
-        std::size_t write(const char* ptr);
+    tcp_client();
 
-        anthems::bytes read();
+    ss_conn connect(const std::string &host, const std::string &port);
 
-    private:
-        asio::io_service *m_serv;
-        asio::ip::tcp::socket *m_sock;
+private:
+    asio_s m_serv;
 
-    };
+};
+
+//todo udp
+class udp_client{
+public:
+
+};
 
 }
 

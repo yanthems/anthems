@@ -3,27 +3,37 @@
 #include <cstring>
 namespace anthems {
 
-bytes::bytes(const std::string&str)
-    :super(str.length()) {
+bytes::bytes(const std::string &str)
+        : super(str.length()) {
     std::size_t index = 0;
-    for (const auto&i : str) {
+    for (const auto &i : str) {
         this->at(index++) = i;
         //(*this)[index++] = i;
     }
 }
 
-bytes::bytes(const char*str)
-    :super(std::strlen(str)) {
+bytes::bytes(const char *str)
+        : super(std::strlen(str)) {
     for (unsigned int index = 0; *str != '\0'; str++) {
         this->at(index++) = *str;
     }
 }
+
 bytes::bytes(std::size_t t)
-    : super(t) {
+        : super(t) {
 }
+
 bytes::bytes() {
 }
-bytes& bytes::operator+=(const bytes&data) {
+
+bytes &bytes::cover(const anthems::bytes &data, std::size_t begin) {
+    for (const auto &i:data) {
+        this->at(begin++) = i;
+    }
+    return *this;
+}
+
+bytes &bytes::operator+=(const bytes &data) {
     auto start = this->size();
     this->resize(start + data.size());
     for (auto i = 0; i < data.size(); i++) {
@@ -31,7 +41,8 @@ bytes& bytes::operator+=(const bytes&data) {
     }
     return *this;
 }
-bytes& bytes::operator+=(const char*str) {
+
+bytes &bytes::operator+=(const char *str) {
     auto start = this->size();
     int len = std::strlen(str);
     this->resize(start + len);
@@ -40,7 +51,8 @@ bytes& bytes::operator+=(const char*str) {
     }
     return *this;
 }
-bytes& bytes::operator+=(const std::string&str) {
+
+bytes &bytes::operator+=(const std::string &str) {
     auto start = this->size();
     this->resize(start + str.size());
     for (auto i = 0; i < str.size(); i++) {
@@ -48,22 +60,25 @@ bytes& bytes::operator+=(const std::string&str) {
     }
     return *this;
 }
-bytes operator+(const bytes&src, const bytes&data) {
+
+bytes operator+(const bytes &src, const bytes &data) {
     auto res = src;
-    return res += data;
+    res += data;
+    return res;
 }
-bytes operator+(bytes&&src, bytes&&data) {
-    src += data;
-    return src;
-}
-bytes operator+(const bytes&src, const char*str) {
+
+bytes operator+(const bytes &src, const char *str) {
     auto res = src;
-    return res += str;
+    res += str;
+    return res;
 }
-bytes operator+(const bytes&src, const std::string&str) {
+
+bytes operator+(const bytes &src, const std::string &str) {
     auto res = src;
-    return res += str;
+    res += str;
+    return res;
 }
+
 bytes bytes::split(std::size_t begin, std::size_t end) {
     if (end == ToEnd) {
         end = this->size();
@@ -74,6 +89,14 @@ bytes bytes::split(std::size_t begin, std::size_t end) {
         res[index++] = this->at(i);
     }
     return res;
+}
+
+std::ostream &operator<<(std::ostream &out, const anthems::bytes &data) {
+    out << std::hex;
+    for (const auto &i:data) {
+        out << i;
+    }
+    return out;
 }
 
 }
