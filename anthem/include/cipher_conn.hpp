@@ -7,18 +7,17 @@
 
 namespace anthems{
 
-class cipher_conn{
+class cipher_conn:public ss_conn{
+    using super=ss_conn;
 
-public:
-    static const constexpr auto Block=bytes::Large_Block;
 public:
     cipher_conn(ss_conn&&c,const std::string&method,const std::string&password);
-
-    bytes read(std::size_t size=Block);
-    void write(const bytes&data);
+    cipher_conn(ss_conn&&con,cipher&& cip);
+    cipher_conn(asio::io_service &io,cipher&&cip);
+    bytes read(std::size_t size=Block) override ;
+    std::size_t write(const anthems::bytes&data) override ;
 private:
     cipher m_cipher;
-    ss_conn m_conn;
 };
 
 }

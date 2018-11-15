@@ -18,12 +18,13 @@ public:
 
     cipher(const cipher &other);
 
-    cipher(cipher &&other) = default;
+    cipher(cipher &&other);
 
     cipher &operator=(const cipher &other);
 
-    cipher &operator=(cipher &&other) = default;
+    cipher &operator=(cipher &&other);
 
+    cipher copy();
 
     //md5 hash --> general enough length password
     static bytes evpBytesToKey(std::string password, int kenLen);
@@ -37,7 +38,7 @@ public:
     static bytes md5Sum(std::string &&str);
 
 public:
-    cipher_stream *method = nullptr;
+    cipher_stream* method = nullptr;
 
 private:
     cipher() {};

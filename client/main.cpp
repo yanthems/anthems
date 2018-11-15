@@ -8,6 +8,9 @@
 
 int main() {
 
+    anthems::tcp_client testc;
+    testc.connect("www.baidu.com");
+
     try {
         anthems::tcp_client client;
 
@@ -16,9 +19,11 @@ int main() {
         auto cc=anthems::cipher_conn(
                 std::move(c),"aes-256-cfb","foobar");
 
-        anthems::bytes raw(anthems::cipher_conn::Block);
-        raw.cover("fuck gfw!");
-
+        auto raw=anthems::bytes{
+            "GET / HTTP1.1\r\n"
+            "Host:www.baidu.com\r\n"
+            "\r\n\r\n"
+        };
         cc.write(raw);
 
         auto res=cc.read();

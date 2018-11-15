@@ -10,8 +10,6 @@ namespace anthems {
 class tcp_server {
 public:
 
-
-
     tcp_server(const std::string &port,asio::ip::tcp ver=tcpv4);
 
     ss_conn accept();

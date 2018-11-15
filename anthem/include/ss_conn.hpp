@@ -31,7 +31,11 @@ using udp_q=asio::ip::udp::resolver::query;
 using asio_socket_raw=asio::ip::tcp::socket;
 using asio_socket=std::shared_ptr<asio_socket_raw>;
 
-const auto tcpv4 = asio::ip::tcp::v4();
+#if __cplusplus>201703L
+inline static auto tcpv4 = asio::ip::tcp::v4();
+#else
+const auto tcpv4=asio::ip::tcp::v4();
+#endif
 const auto tcpv6 = asio::ip::tcp::v6();
 const auto udpv4 = asio::ip::udp::v4();
 const auto udpv6 = asio::ip::udp::v6();
@@ -39,18 +43,21 @@ const auto udpv6 = asio::ip::udp::v6();
 class ss_conn : public asio_socket {
     using super=asio_socket;
 public:
+    static const constexpr auto Block=bytes::Large_Block;
+public:
     ss_conn(asio::io_service &io);
 
-    anthems::bytes read(std::size_t t);
+    ss_conn(){}
+    virtual ~ss_conn(){
+        (*this)->close();
+    }
 
-    anthems::bytes read();
+    virtual anthems::bytes read(std::size_t t);
 
-    std::size_t write(const anthems::bytes &data);
+    virtual std::size_t write(const anthems::bytes &data);
 
-    std::size_t write(const char *data);
 
-    std::size_t write(const std::string &data);
-
+    static size_t pip_then_close( ss_conn&src, ss_conn&dst);
 private:
     anthems::bytes read_all();
 };

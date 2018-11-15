@@ -3,6 +3,7 @@
 
 #include "bytes.hpp"
 #include <openssl/aes.h>
+#include <memory>
 
 namespace anthems {
 
@@ -27,8 +28,8 @@ struct cipher_stream : public cipher_interface {
     bytes dec_iv;
 
     cipher_stream(const bytes&keys,int ivl) :m_key(keys),ivLen(ivl){}
-
-    virtual cipher_stream *copy() = 0;
+    virtual cipher_stream* copy()=0;
+    virtual void reset()=0;
     virtual bool is_init_encrypt(){
         return !enc_iv.empty();
     }
@@ -38,7 +39,7 @@ struct cipher_stream : public cipher_interface {
 
     virtual ~cipher_stream() {}
 
-    int ivLen;
+    std::size_t ivLen;
 };
 
 //AES_cfb128_encrypt
@@ -51,13 +52,15 @@ public:
 
     bytes init_encrypt() override;
 
+    cipher_stream* copy()override;
+
+    void reset()override ;
+
     void init_decrypt(const bytes &iv) override;
 
     bytes encrypt(const bytes &src) override;
 
     bytes decrypt(const bytes &src) override;
-
-    cipher_stream *copy() override;
 
 private:
     bytes xor_stream(const bytes &src, DecOrEnc doe);

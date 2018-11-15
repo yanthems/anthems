@@ -8,7 +8,6 @@ namespace anthems {
 
 ss_conn::ss_conn(asio::io_service &io)
         : super(std::make_shared<asio_socket_raw>(io))
-//    :super (std::shared_ptr<asio::ip::tcp::socket>(new asio::ip::tcp::socket(io)))
 {
 }
 
@@ -17,10 +16,6 @@ anthems::bytes ss_conn::read(std::size_t n) {
     auto buf = asio::buffer(res);
     (*this)->read_some(buf);
     return res;
-}
-
-anthems::bytes ss_conn::read() {
-    return read_all();
 }
 
 anthems::bytes ss_conn::read_all() {
@@ -52,6 +47,7 @@ std::size_t ss_conn::write(const anthems::bytes &data) {
     return (*this)->write_some(buf);
 }
 
+#if 0
 std::size_t ss_conn::write(const char *data) {
     asio::const_buffer buf(data, std::strlen(data));
     return (*this)->write_some(buf);
@@ -61,4 +57,21 @@ std::size_t ss_conn::write(const std::string &data) {
     asio::const_buffer buf(data.data(), data.size());
     return (*this)->write_some(buf);
 }
+#endif
+
+size_t ss_conn::pip_then_close(anthems::ss_conn &src,anthems::ss_conn &dst) {
+
+    size_t res=0;
+    try {
+        while (true){
+            auto res=src.read(ss_conn::Block);
+            res+=dst.write(res);
+        }
+    }catch (const std::exception&e){
+        anthems::log(e.what());
+    }
+
+    return res;
+}
+
 }

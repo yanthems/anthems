@@ -5,14 +5,25 @@ namespace anthems{
 
 
 cipher_conn::cipher_conn(anthems::ss_conn &&c, const std::string &method, const std::string &password)
-:m_conn(std::forward<ss_conn>(c)),m_cipher(method,password){
+:super(std::forward<ss_conn>(c)),
+ m_cipher(method,password){
 
 }
 
+cipher_conn::cipher_conn(anthems::ss_conn &&con, anthems::cipher &&cip)
+:super (std::forward<ss_conn>(con)),
+m_cipher(std::forward<cipher>(cip)){
+
+}
+
+cipher_conn::cipher_conn(asio::io_service &io, anthems::cipher &&cip)
+:super(io),m_cipher(std::forward<cipher>(cip)){
+
+}
 
 //anthems::cipher_conn::Block
-void cipher_conn::write(const bytes&data) {
-
+std::size_t cipher_conn::write(const bytes&data) {
+    auto sptr=(super*)this;
     if(!m_cipher.method->is_init_encrypt()){
         m_cipher.method->init_encrypt();
     }
@@ -24,15 +35,17 @@ void cipher_conn::write(const bytes&data) {
 //    log("data ===",edata);
 //    log("write ===>",res);
 
-    m_conn.write(res);
-
+    sptr->write(res);
+    return res.size();
 }
 bytes cipher_conn::read(std::size_t size) {
-    auto iv=m_conn.read(m_cipher.method->ivLen);
+    auto sptr=(super*)this;
+
+    auto iv=sptr->read(m_cipher.method->ivLen);
     if(!m_cipher.method->is_init_decrypt()){
         m_cipher.method->init_decrypt(iv);
     }
-    auto ddata=m_conn.read(size);
+    auto ddata=sptr->read(size);
     auto res=m_cipher.method->decrypt(ddata);
 //    log("iv ===",iv);
 //    log("data ===",ddata);

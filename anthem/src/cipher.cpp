@@ -5,11 +5,11 @@
 #include <map>
 #include <cstring>
 #include <functional>
-#include <functional>
+#include <memory>
 namespace anthems {
 
 static std::map<std::string,
-        std::function< cipher_stream*(const std::string&)> > cipherMethod = {
+        std::function<cipher_stream*(const std::string&)> > cipherMethod = {
         {
                 "aes-128-cfb",
                 [](const std::string& p) {
@@ -45,18 +45,37 @@ cipher::cipher(const std::string &m, const std::string &p) {
 }
 
 cipher::~cipher() {
-    delete method;
+    delete this->method;
 }
 
 cipher::cipher(const cipher &other) {
-    this->method = this->method->copy();
+    this->method=other.method->copy();
+    this->method->reset();
+}
+cipher::cipher(anthems::cipher &&other) {
+    this->method=other.method;
+    other.method= nullptr;
 }
 
-cipher &cipher::operator=(const cipher &other) {
-    this->method = this->method->copy();
+cipher& cipher::operator=(const cipher &other) {
+    if(this!=&other){
+        delete this->method;
+        this->method=other.method->copy();
+        this->method->reset();
+    }
     return *this;
 }
-
+cipher& cipher::operator=(anthems::cipher &&other) {
+    if(this!=&other){
+        this->method=other.method;
+        other.method= nullptr;
+    }
+    return *this;
+}
+cipher cipher::copy(){
+    cipher c=*this;
+    return c;
+}
 // test
 // foobar 32
 // 3858F62230AC3C915F300C664312C63F568378529614D22DDB49237D2F60BFDF

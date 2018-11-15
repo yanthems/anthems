@@ -14,7 +14,6 @@ tcp_server::tcp_server(const std::string &port,asio::ip::tcp ver) {
     auto uiport = std::stoi(port);
     auto m_ep = tcp_ep_raw(ver, uiport);
     m_acp = std::make_shared<tcp_acp_raw>(*m_serv, m_ep);
-
 }
 
 

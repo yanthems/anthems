@@ -1,6 +1,7 @@
 #include "cipher_stream.hpp"
 #include <random>
 #include <limits>
+#include <memory>
 #include "logger.hpp"
 namespace anthems {
 
@@ -67,10 +68,14 @@ void aes_cipher::init_decrypt(const bytes &iv) {
     dec_iv = iv;
 }
 
-cipher_stream *aes_cipher::copy() {
-    auto ptr = new aes_cipher(*this);
-    return dynamic_cast<cipher_stream *>(ptr);
+cipher_stream* aes_cipher::copy() {
+    auto ptr=new aes_cipher(*this);
+    return ptr;
 }
 
+void aes_cipher::reset() {
+    enc_iv=bytes(ivLen);
+    dec_iv=bytes(ivLen);
+}
 
 }
