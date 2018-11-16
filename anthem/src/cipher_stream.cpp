@@ -60,22 +60,19 @@ bytes aes_cipher::init_encrypt() {
         res[i] = ud(dre);
     }
     enc_iv = res;
+//    anthems::log("enc iv ===>",enc_iv);
     return res;
 }
 
 //copy the dec_iv for are_cfv_128
 void aes_cipher::init_decrypt(const bytes &iv) {
     dec_iv = iv;
+//    anthems::log("dec iv ===>",dec_iv);
 }
 
 cipher_stream* aes_cipher::copy() {
     auto ptr=new aes_cipher(*this);
     return ptr;
-}
-
-void aes_cipher::reset() {
-    enc_iv=bytes(ivLen);
-    dec_iv=bytes(ivLen);
 }
 
 }

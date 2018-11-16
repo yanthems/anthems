@@ -80,8 +80,11 @@ bytes operator+(const bytes &src, const std::string &str) {
 }
 
 bytes bytes::split(std::size_t begin, std::size_t end) {
-    if (end == ToEnd) {
+    if (end == ToEnd||end>this->size()) {
         end = this->size();
+    }
+    if(end<begin){
+        return bytes();
     }
     auto res = bytes(end - begin);
     std::size_t index = 0;
@@ -91,7 +94,11 @@ bytes bytes::split(std::size_t begin, std::size_t end) {
     return res;
 }
 
-std::ostream &operator<<(std::ostream &out, const anthems::bytes &data) {
+std::string bytes::to_string() {
+    return std::string((char*)this->data());
+}
+
+std::ostream &operator<<(std::ostream &out,const anthems::bytes &data) {
     out << std::hex;
     for (const auto &i:data) {
         out << i;

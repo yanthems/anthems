@@ -29,7 +29,10 @@ struct cipher_stream : public cipher_interface {
 
     cipher_stream(const bytes&keys,int ivl) :m_key(keys),ivLen(ivl){}
     virtual cipher_stream* copy()=0;
-    virtual void reset()=0;
+    virtual void reset(){
+        enc_iv=bytes();
+        dec_iv=bytes();
+    }
     virtual bool is_init_encrypt(){
         return !enc_iv.empty();
     }
@@ -54,7 +57,6 @@ public:
 
     cipher_stream* copy()override;
 
-    void reset()override ;
 
     void init_decrypt(const bytes &iv) override;
 

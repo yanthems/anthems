@@ -48,18 +48,22 @@ public:
     ss_conn(asio::io_service &io);
 
     ss_conn(){}
-    virtual ~ss_conn(){
-        (*this)->close();
-    }
 
-    virtual anthems::bytes read(std::size_t t);
+    virtual anthems::bytes read(std::size_t n);
+
+    virtual std::tuple<anthems::bytes,std::size_t> read_length(std::size_t n);
+
+    virtual anthems::bytes read_enough(std::size_t n);
 
     virtual std::size_t write(const anthems::bytes &data);
 
+    static std::size_t pipe_then_close(ss_conn &src, ss_conn &dst, const std::string &debug_name = "debug");
 
-    static size_t pip_then_close( ss_conn&src, ss_conn&dst);
-private:
-    anthems::bytes read_all();
+#if 0
+//    virtual anthems::bytes read(std::size_t n, asio::error_code &err);
+//    virtual std::size_t write(const anthems::bytes &data, asio::error_code &err);
+//    static std::size_t bib_then_close(ss_conn&src,ss_conn&dst);
+#endif
 };
 }
 #endif // !ANTHEMS_SSCONN_HPP

@@ -14,8 +14,14 @@ public:
     cipher_conn(ss_conn&&c,const std::string&method,const std::string&password);
     cipher_conn(ss_conn&&con,cipher&& cip);
     cipher_conn(asio::io_service &io,cipher&&cip);
-    bytes read(std::size_t size=Block) override ;
+    bytes read(std::size_t) override;
     std::size_t write(const anthems::bytes&data) override ;
+
+//    bytes read(std::size_t size,asio::error_code& err)override ;
+//    std::size_t write(const anthems::bytes &data, asio::error_code &err)override ;
+
+    bytes read_all();
+    std::size_t write_all(anthems::bytes&data);
 private:
     cipher m_cipher;
 };

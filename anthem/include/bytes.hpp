@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 #include <ostream>
-
+#include <array>
 namespace anthems {
 
 using byte = unsigned char;
@@ -43,7 +43,19 @@ public:
 
     bytes split(std::size_t begin, std::size_t end = ToEnd);
 
-    friend std::ostream &operator<<(std::ostream &out, const bytes &data);
+    std::string to_string();
+
+    template <int n>
+    std::array<byte,n> to_array(){
+        std::array<byte,n>res;
+        std::size_t count=0;
+        for(auto &i:*this){
+            res[count++]=i;
+        }
+        return res;
+    };
+
+    friend std::ostream &operator<<(std::ostream &out,const bytes &data);
 };
 
 }

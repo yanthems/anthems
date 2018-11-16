@@ -14,33 +14,28 @@ ss_conn::ss_conn(asio::io_service &io)
 anthems::bytes ss_conn::read(std::size_t n) {
     auto res = anthems::bytes(n);
     auto buf = asio::buffer(res);
-    (*this)->read_some(buf);
-    return res;
-}
-
-anthems::bytes ss_conn::read_all() {
-    std::size_t len = anthems::bytes::Block_Size;
-    anthems::bytes res;
-    asio::error_code err;
-    while (true) {
-        auto tmp = anthems::bytes(len);
-        auto buf = asio::buffer(tmp);
-        auto n = (*this)->read_some(buf, err);
-        res += tmp;
-        if (n < len) {
-            break;
-        }
-        if (err.value() == 0) {
-            continue;
-        }
-        if (err.value() == asio::error::eof) {
-            break;
-        } else {
-            asio::detail::throw_error(err, "receive");
-        }
+    auto len=(*this)->read_some(buf);
+    if(len<n){
+        anthems::log("len=",len,"n=",n);
+        res.resize(len);
     }
     return res;
 }
+
+anthems::bytes ss_conn::read_enough(std::size_t n) {
+    auto res = anthems::bytes(n);
+    auto buf = asio::buffer(res);
+    auto len=(*this)->read_some(buf);
+    return res;
+}
+
+std::tuple<anthems::bytes,std::size_t> ss_conn::read_length(std::size_t n) {
+    auto res = anthems::bytes(n);
+    auto buf = asio::buffer(res);
+    auto len=(*this)->read_some(buf);
+    return std::make_tuple(res,len);
+}
+
 
 std::size_t ss_conn::write(const anthems::bytes &data) {
     asio::const_buffer buf(data.data(), data.size());
@@ -48,30 +43,64 @@ std::size_t ss_conn::write(const anthems::bytes &data) {
 }
 
 #if 0
-std::size_t ss_conn::write(const char *data) {
-    asio::const_buffer buf(data, std::strlen(data));
-    return (*this)->write_some(buf);
+anthems::bytes ss_conn::read(std::size_t n, asio::error_code &err) {
+    auto res = anthems::bytes(n);
+    auto buf = asio::buffer(res);
+    (*this)->read_some(buf,err);
+    return res;
 }
 
-std::size_t ss_conn::write(const std::string &data) {
+std::size_t ss_conn::write(const anthems::bytes &data, asio::error_code &err) {
     asio::const_buffer buf(data.data(), data.size());
-    return (*this)->write_some(buf);
+    return (*this)->write_some(buf,err);
 }
 #endif
 
-size_t ss_conn::pip_then_close(anthems::ss_conn &src,anthems::ss_conn &dst) {
 
-    size_t res=0;
-    try {
+size_t ss_conn::pipe_then_close(anthems::ss_conn &src, anthems::ss_conn &dst, const std::string &debug_name) {
+
+    size_t len=0;
+    anthems::bytes res;
         while (true){
-            auto res=src.read(ss_conn::Block);
-            res+=dst.write(res);
+            try {
+                res=std::move(src.read(ss_conn::Block));
+            }catch (const std::exception&e){
+                anthems::log(e.what(),debug_name);
+                break;
+            }
+            anthems::log(debug_name,"->",res);
+            try {
+                len+=dst.write(res);
+            }catch (const std::exception&e){
+                anthems::log(e.what(),debug_name);
+                break;
+            }
         }
-    }catch (const std::exception&e){
-        anthems::log(e.what());
-    }
-
-    return res;
+    return len;
 }
+
+#if 0
+std::size_t ss_conn::bib_then_close(anthems::ss_conn &src, anthems::ss_conn &dst) {
+    size_t len=0;
+    anthems::bytes res;
+    asio::error_code err;
+    while (true){
+        res=std::move(src.read(ss_conn::Block,err));
+        if(err.value()==asio::error::eof){
+            break;
+        } else if(err.value()!=0){
+            anthems::log(err.message());
+            break;
+        }
+        len+=dst.write(res,err);
+        if(err.value()==asio::error::eof){
+            break;
+        }else if(err.value()!=0){
+            anthems::log(err.message());
+            break;
+        }
+    }
+}
+#endif
 
 }
