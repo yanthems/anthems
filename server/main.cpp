@@ -6,59 +6,49 @@
 #include "logger.hpp"
 #include "sss.hpp"
 #include "cipher_conn.hpp"
+#include "safe_queue.hpp"
+#include "protocol.hpp"
 
 #include <future>
 #include <ssc.hpp>
 #include <helper.hpp>
-
 #include <thread_pool.hpp>
 
-void proxy(const std::string&port){
-    auto server=anthems::tcp_server(port,anthems::tcpv4);
-    auto client=anthems::tcp_client();
+void proxy(const std::string&port) {
+    auto server = anthems::tcp_server(port, anthems::tcpv4);
+    auto client = anthems::tcp_client();
+
+    auto cipher = anthems::cipher("aes-256-cfb", "test23334");
+    thread_pool tp(4);
+    safe_queue<std::future<void>> res;
     try {
-        auto cipher=anthems::cipher("aes-256-cfb","test23334");
-        thread_pool tp(4);
-        std::vector<std::future<void>>res;
-        while (true){
-            auto cip=cipher;
-            auto cip_c=anthems::cipher_conn(server.accept(),std::move(cip));
-            
-            res.emplace_back(tp.add([&](){
-                
-                auto addr=cip_c.read(263);
-                auto [host,port]=anthems::parse_addr(addr);
-                
-                anthems::ss_conn remote_c;
-                try {
-                    remote_c=client.connect(host,port);
-                }catch (const std::exception&e){
-                    anthems::log(e.what());
-                    return;
-                }
-                
+        while (true) {
+            auto cip = cipher;
+            auto cip_c = anthems::cipher_conn(server.accept(), std::move(cip));
 
-                auto f1=std::async([&](){
-                    return anthems::ss_conn::pipe_then_close(cip_c, remote_c, "recv from local,send to server");
-                });
-                auto f2=std::async([&](){
-                    return anthems::ss_conn::pipe_then_close(remote_c, cip_c, "recv from server,send to local ");
-                });
+//                res.push(tp.add([&](){
+            try {
+                auto addr = cip_c.read(anthems::sockv5::RequestSize);
+                auto[host, port]=anthems::sockv5::parse_addr(addr);
 
-                anthems::log("local count=",f1.get(),"sever count=",f2.get());
-                remote_c->shutdown(remote_c->shutdown_both);
-                cip_c->shutdown(cip_c->shutdown_both);
-                anthems::log("==try close==");
+                auto sp = anthems::simple(client.connect(host, port));
+
+                auto f1 = std::async([&]() {
+                    return anthems::ss_conn::pipe_then_close(cip_c, sp.get(), "local to server");
+                });
+                anthems::ss_conn::pipe_then_close(sp.get(), cip_c, "server to local ");
+
+                anthems::log("local count=", f1.get());
+                anthems::log("==try close cipher conn==");
                 cip_c->close();
-                remote_c->close();
-            }));
+            } catch (const std::exception &e) {
+                anthems::log(e.what());
+                continue;
+            }
+//                }));
+        }
 
-         
-        }
-        for(auto &&i:res){
-            i.get();
-        }
-    }catch (const std::exception&e){
+    } catch (const std::exception &e) {
         anthems::log(e.what());
     }
 

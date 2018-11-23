@@ -34,13 +34,15 @@ public:
 #else
         using r = std::result_of_t<F(Args...)>;
 #endif
-          auto task_pack_ptr = std::make_shared<std::packaged_task<r()>>([&]() -> r {
-#if __cplusplus>=201703L
-              return std::invoke(std::forward<F>(f), std::forward<Args>(args)...);
+          auto task_pack_ptr = std::make_shared<std::packaged_task<r(void)>>(
+                  [&]() -> r {
+#if __cplusplus >= 201703L
+                      return std::invoke(std::forward<F>(f), std::forward<Args>(args)...);
 #else
-              return f(std::forward<Args>(args)...);
+                      return f(std::forward<Args>(args)...);
 #endif
-            });
+                  }
+            );
         auto result = task_pack_ptr->get_future();
         {
             std::unique_lock<std::mutex> ulock(m_lock);
@@ -52,7 +54,7 @@ public:
                     return f(std::forward<Args>(args)...);
 #endif
                 });
-            m_tasks.emplace([task_pack_ptr]() { (*task_pack_ptr)(); });
+            m_tasks.emplace([f=std::move(task_pack_ptr)]() { (*f)(); });
         }
         m_notify.notify_one();
         return result;

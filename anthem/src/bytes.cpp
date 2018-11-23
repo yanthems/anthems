@@ -95,7 +95,12 @@ bytes bytes::split(std::size_t begin, std::size_t end) {
 }
 
 std::string bytes::to_string() {
-    return std::string((char*)this->data());
+//    return std::string((char*)this->data());
+    std::string res;
+    for(auto&i:*this){
+        res+=i;
+    }
+    return res;
 }
 
 std::ostream &operator<<(std::ostream &out,const anthems::bytes &data) {

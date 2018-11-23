@@ -7,7 +7,7 @@
 namespace anthems {
 
 ss_conn::ss_conn(asio::io_service &io)
-        : super(std::make_shared<asio_socket_raw>(io))
+        : super(std::move(std::make_shared<asio_socket_raw>(io)))
 {
 }
 
@@ -56,25 +56,33 @@ std::size_t ss_conn::write(const anthems::bytes &data, asio::error_code &err) {
 }
 #endif
 
-
 size_t ss_conn::pipe_then_close(anthems::ss_conn &src, anthems::ss_conn &dst, const std::string &debug_name) {
 
     size_t len=0;
-    anthems::bytes res;
+    bool isRead=true;
         while (true){
+            anthems::bytes res;
             try {
-                res=std::move(src.read(ss_conn::Block));
+                if(isRead) {
+                    res = std::move(src.read(ss_conn::Block));
+                }
             }catch (const std::exception&e){
                 anthems::log(e.what(),debug_name);
-                break;
             }
-            anthems::log(debug_name,"->",res);
+            if(res.size()<ss_conn::Block){
+                src.read_over();
+                isRead=false;
+            }
+            if(res.empty())break;
+            anthems::log(debug_name,"======read======>",res.size());
             try {
-                len+=dst.write(res);
-            }catch (const std::exception&e){
-                anthems::log(e.what(),debug_name);
+                    len+= dst.write(res);
+            }catch (const std::exception&e) {
+                anthems::log(e.what(), debug_name);
+                dst.write_over();
                 break;
             }
+            anthems::log(debug_name,"======write======>",res.size());
         }
     return len;
 }

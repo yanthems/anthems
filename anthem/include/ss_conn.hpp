@@ -3,7 +3,7 @@
 
 #include "bytes.hpp"
 #include "asio.hpp"
-
+#include "logger.hpp"
 #include <memory>
 namespace anthems {
 
@@ -48,7 +48,16 @@ public:
     ss_conn(asio::io_service &io);
 
     ss_conn(){}
-
+    
+    void read_over(){
+        anthems::log(__func__);
+        (*this)->shutdown((*this)->shutdown_receive);
+    }
+    void write_over(){
+        anthems::log(__func__);
+        (*this)->shutdown((*this)->shutdown_send);
+    }
+    
     virtual anthems::bytes read(std::size_t n);
 
     virtual std::tuple<anthems::bytes,std::size_t> read_length(std::size_t n);

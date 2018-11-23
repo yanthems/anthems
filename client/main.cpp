@@ -5,169 +5,79 @@
 #include "cipher_conn.hpp"
 
 #include "cipher.hpp"
+#include "protocol.hpp"
+
+#include "protocol.hpp"
+#include "safe_queue.hpp"
 
 #include <thread_pool.hpp>
 #include <future>
-#include <helper.hpp>
+#include <chrono>
 
-int handle(anthems::ss_conn&& conn) {
-
+int handle(anthems::ss_conn&& conn,const std::string&host,const std::string&port) {
     anthems::tcp_client client;
     auto cipher=anthems::cipher("aes-256-cfb","test23334");
 
-    std::string rhost="127.0.0.1";
-    std::string rport="23334";
-    std::string host;
-    std::string port;
-
-    auto hand_shake = [&]() {
-/* request
--------------------------------------
-|	VER		NMETHODS	METHODS		|
-|	1byte	1byte		1byte		|
--------------------------------------
-*/
-        auto res = conn.read_enough(3);
-        if (res[0] != 0x05) {
-            anthems::log("not socksV5");
-            return;
-        } else {
-            switch (res[2]) {
-                //no password
-                case 0x00: {
-                    conn.write(anthems::bytes({0x05, 0x00}));
-                }
-                    break;
-                    //security interface
-                case 0x01: {
-                    conn.write(anthems::bytes({0x05, 0x01}));
-                }
-                    break;
-                    //username + password
-                case 0x03: {
-                    conn.write(anthems::bytes({0x05, 0x02}));
-                }
-                    break;
-                    // 0x03 ~ 0x7F IANA allocation
-                    // 0x80 ~ 0xFE private method
-                case 0xff: {
-                    anthems::log("no method");
-                    return;
-                }
-            }
-        }
-//        conn.write(anthems::bytes({0x05, 0x00}));
-    };
-
-    auto get_request=[&](){
-/* request
--------------------------------------------------------------
-|	VER		CMD		RSV		ATYP	DST.ADDR	DST.PORT	|
-|	1byte	1byte	1byte	1byte	n byte		2byte		|
--------------------------------------------------------------
-*/
-// 1 + 1 + 1 + 1 + (1+255) + 2
-        auto res = conn.read_enough(263);
-        auto rawreq=anthems::bytes{};
-        if(res[0]!=0x05){
-            anthems::log("not socksV5");
-            return rawreq;
-        }
-        if(res[1]!=0x01){
-            anthems::log("socks command not supported");
-            return rawreq;
-        }
-        const constexpr auto AddressIndex=3;
-        rawreq=res.split(AddressIndex);
-         auto [thost,tport]=anthems::parse_addr(rawreq);
-        host=thost;
-        port=tport;
-        return rawreq;
-    };
-
-    auto do_response=[&](){
-        auto rsp=anthems::bytes(10);
-        //socket version
-        rsp[0]=0x05;
-        //response status
-        //	0x00	成功
-        //	0x01	普通的失败
-        //	0x02	规则不允许的连接
-        //	0x03	网络不可达
-        //	0x04	主机不可达
-        //	0x05	连接被拒绝
-        //	0x06	TTL超时
-        //	0x07	不支持的命令
-        //	0x08	不支持的地址类型
-        //	0x09 ~ 0xFF		未定义
-        rsp[1]=0x00;
-        //RSV must 0x00
-        rsp[2]=0x00;
-        //address type
-        //	0x01	IPV4
-        //	0x03	域名
-        //	0x04	IPV6
-        rsp[3]=0x01;
-        // IPV4为4字节 域名为字符串 IPV6为16字节
-        rsp[4]= rsp[5]= rsp[6]=rsp[7] = 0x00;
-        //bind port
-        rsp[8]=0x08,rsp[9]=0x43;
-        conn.write(rsp);
-    };
 
     auto create_cipconn=[&](anthems::bytes&&helloData){
-        if(host.empty()||port.empty()){
-            throw std::logic_error("host or port is empty");
-        }
+//        auto [shost,sport]=anthems::sockv5::parse_addr(helloData);
+//        if(shost.empty()||sport.empty()){
+//            throw std::logic_error("host or port is empty");
+//        }
         auto mcip=cipher;
-        auto cip_c=anthems::cipher_conn(client.connect(rhost,rport),std::move(mcip));
-
+        auto cip_c=anthems::cipher_conn(client.connect(host,port),std::move(mcip));
         cip_c.write(helloData);
         return cip_c;
     };
 
     try {
-        anthems::log("start hand shake");
-        hand_shake();
-        anthems::log("get request");
-        auto helloData=get_request();
-        do_response();
-        auto cip_c=create_cipconn(std::move(helloData));
-
+        auto s5=anthems::sockv5(std::forward<anthems::ss_conn>(conn));
+        auto cip_c=create_cipconn(s5.get_request());
         auto f1=std::async([&](){
-            return anthems::ss_conn::pipe_then_close(conn,cip_c,"local say:");
+            return anthems::ss_conn::pipe_then_close(s5.get(),cip_c,"local say:");
         });
-//        auto f2=std::async([&](){
-//            return anthems::ss_conn::pipe_then_close(cip_c,conn,"remote say:");
-//        });
-//        anthems::log("local count=",f1.get(),"sever count=",f2.get());
-
-        anthems::ss_conn::pipe_then_close(cip_c,conn,"remote say:");
-        f1.get();
-        conn->shutdown(conn->shutdown_both);
-        cip_c->shutdown(cip_c->shutdown_both);
-        anthems::log("==try close==");
-        conn->close();
+        anthems::ss_conn::pipe_then_close(cip_c,s5.get(),"remote say:");
+        anthems::log("local count=", f1.get());
+        anthems::log("==try close cipher conn==");
         cip_c->close();
     }catch (const std::exception&e){
         anthems::log(e.what());
     }
 
+    return 0;
 }
-void listen(const std::string&port){
+void listen(const std::string&port) {
 
-    anthems::tcp_server server(port,anthems::tcpv4);
+    anthems::tcp_server server(port, anthems::tcpv4);
     thread_pool tp(4);
 
-    std::vector<std::future<int>>res;
+    safe_queue<std::future<int>> res;
 
-    while (true){
-        res.emplace_back(tp.add(handle,std::move(server.accept())));
+
+    try {
+        std::thread t1([&]() {
+            while (true) {
+                auto conn = server.accept();
+                anthems::log("push");
+#if 0
+                res.push(tp.add(handle,
+                               std::move(conn),
+                               "127.0.0.1",
+                               "1088"));
+#else
+        handle(std::move(conn),"127.0.0.1","23334");
+#endif
+            }
+        });
+        while (true) {
+            anthems::log("get");
+            res.pop_front().wait_for(std::chrono::seconds(30));
+        }
+        t1.join();
+    } catch (const std::exception &e) {
+        anthems::log(e.what());
     }
 
-    for(auto &&i:res){
-        i.get();
-    }
 }
 
 int main(){
