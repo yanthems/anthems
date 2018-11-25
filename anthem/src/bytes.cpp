@@ -23,8 +23,6 @@ bytes::bytes(std::size_t t)
         : super(t) {
 }
 
-bytes::bytes() {
-}
 
 bytes &bytes::cover(const anthems::bytes &data, std::size_t begin) {
     for (const auto &i:data) {
@@ -104,10 +102,17 @@ std::string bytes::to_string() {
 }
 
 std::ostream &operator<<(std::ostream &out,const anthems::bytes &data) {
+#ifdef HEX
     out << std::hex;
     for (const auto &i:data) {
-        out << i;
+        out << int(i);
     }
+    out<<std::dec;
+#else
+    for(const auto&i:data){
+        out<<i;
+    }
+#endif
     return out;
 }
 

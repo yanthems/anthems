@@ -13,6 +13,7 @@ set(ANTHEM_DIR ${CMAKE_CURRENT_SOURCE_DIR}/anthem CACHE STRING "anthem dir")
 set(ASIO_DIR ${CMAKE_CURRENT_SOURCE_DIR}/asio/asio CACHE STRING "asio dir")
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lssl -lcrypto")
+
 if (UNIX)
 set(CMAKE_CXX_FLAGS "-pthread")
 endif (UNIX)

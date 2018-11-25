@@ -11,12 +11,14 @@ class thread_pool {
 public:
     explicit thread_pool(size_t capacity) noexcept {
         for (size_t i = 0; i < capacity; i++) {
-            m_threads.emplace_back([=]() -> void {
+            m_threads.emplace_back([&]() -> void {
                 for (;;) {
                     std::function<void()> task;
                     {
                         std::unique_lock<std::mutex> ulock(m_lock);
-                        m_notify.wait(ulock, [this] { return m_stop || !m_tasks.empty(); });
+                        m_notify.wait(ulock, [this] {
+                            return m_stop || !m_tasks.empty();
+                        });
                         if (m_stop && m_tasks.empty())
                             return;
                         task = std::move(m_tasks.front());

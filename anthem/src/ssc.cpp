@@ -5,6 +5,7 @@
 namespace anthems {
 tcp_client::tcp_client() {
     m_serv =std::make_shared<asio_s_raw>();
+    
 }
 
 ss_conn tcp_client::connect(const anthems::tcp_q &query) {
@@ -32,6 +33,7 @@ ss_conn tcp_client::connect(const std::string &host, const std::string &port) {
 }
 ss_conn tcp_client::connect(const std::string &host, std::size_t port) {
     tcp_q query(host,std::to_string(port));
+    return connect(query);
 }
 ss_conn tcp_client::connect(const std::string &addr){
     tcp_q query(addr);

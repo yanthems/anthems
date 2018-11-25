@@ -4,13 +4,12 @@
 namespace anthems{
 
 sockv5::sockv5(anthems::ss_conn &&c)
-:conn(std::forward<ss_conn>(c)) {
+:super(std::forward<ss_conn>(c)) {
     hand_shake();
     do_request();
     do_response();
 }
 sockv5::~sockv5() {
-    conn->close();
 }
 void sockv5::hand_shake(){
     /* request
@@ -20,36 +19,36 @@ void sockv5::hand_shake(){
 -------------------------------------
 */
     log(__func__);
-    auto res = conn.read_enough(3);
+    auto res = super::read_all(3);
+    anthems::bytes data;
     if (res[0] != 0x05) {
-        anthems::log("not socksV5");
-        return;
+        throw std::logic_error("not socksV5");
     } else {
         switch (res[2]) {
             //no password
             case 0x00: {
-                conn.write(anthems::bytes({0x05, 0x00}));
+                 data=anthems::bytes({0x05, 0x00});
             }
                 break;
                 //security interface
             case 0x01: {
-                conn.write(anthems::bytes({0x05, 0x01}));
+                 data=anthems::bytes({0x05, 0x01});
             }
                 break;
                 //username + password
             case 0x03: {
-                conn.write(anthems::bytes({0x05, 0x02}));
+                data=anthems::bytes({0x05, 0x02});
             }
                 break;
                 // 0x03 ~ 0x7F IANA allocation
                 // 0x80 ~ 0xFE private method
             case 0xff: {
                 anthems::log("no method");
-                return;
+                throw std::logic_error("un support socket method");
             }
         }
     }
-//        conn.write(anthems::bytes({0x05, 0x00}));
+    super::write_all(data);
 }
 
 void sockv5::do_request(){
@@ -61,12 +60,12 @@ void sockv5::do_request(){
 */
 // 1 + 1 + 1 + 1 + (1+255) + 2
     log(__func__);
-    auto res = conn.read(3);
+    auto res = super::read_all(3);
     if(res[0]!=0x05){
-        anthems::log("not socksV5");
+        throw std::logic_error("not socksV5");
     }
     if(res[1]!=0x01){
-        anthems::log("socks command not supported");
+        throw std::logic_error("socks command not supported");
     }
     do_parse();
 }
@@ -98,37 +97,44 @@ void sockv5::do_response(){
     rsp[4]= rsp[5]= rsp[6]=rsp[7] = 0x00;
     //bind port
     rsp[8]=0x00,rsp[9]=0x00;
-    conn.write(rsp);
+    super::write_all(rsp);
 }
 static const constexpr auto typeIPv4 = 0x01; // type is ipv4 address
 static const constexpr auto typeDM   = 0x03; // type is domain address
 static const constexpr auto typeIPv6 = 0x04; // type is ipv6 address
 void sockv5::do_parse() {
-    rawreq=do_parse(conn);
-    anthems::log("req len=",rawreq.size());
+    rawreq=do_parse(*this);
+    anthems::log("request =>",rawreq,"<=");
 }
 bytes sockv5::do_parse(anthems::ss_conn &c) {
+    using bc=anthems::ss_conn;
     const constexpr auto  IPv4len = 4;
     auto DMlen=0;//dynamic
     const constexpr auto  IPv6len = 16;
     const constexpr auto PortLen=2;
-    auto len=0;
-    auto typeAddr=c.read(1);
+    size_t len=0;
+    auto typeAddr=c.bc::read_all(1);
     bytes dm;
     switch (typeAddr[0]){
-        case typeIPv4:
-            len+=IPv4len;
+        case typeIPv4: {
+            len += IPv4len;
+        }
             break;
-        case typeIPv6:
-            len+=IPv6len;
+        case typeIPv6: {
+            len += IPv6len;
+        }
+            break;
         case typeDM:{
-            dm=c.read(1);
+            dm=c.bc::read_all(1);
             DMlen=dm[0];
             len+=DMlen;
         }
+            break;
+        default:
+            throw std::logic_error("un support socket address type");
     }
     len+=PortLen;
-    return typeAddr+dm+c.read(len);
+    return typeAddr+dm+c.bc::read_all(len);
 }
 std::tuple<std::string,std::string> sockv5::parse_addr(anthems::bytes& req){
 
@@ -169,17 +175,11 @@ std::tuple<std::string,std::string> sockv5::parse_addr(anthems::bytes& req){
             port=std::to_string(req[finish]<<8|req[finish+1]);
         }
             break;
+        default:
+            throw std::logic_error("un support type address: ");
     }
-    anthems::log("req len=",req.size(),"host=>",host,"<=","port=>",port,"<=");
+    anthems::log("socksv5 req len=",req.size(),"host=>",host,"<=","port=>",port,"<=");
     return std::make_tuple(host,port);
-}
-
-simple::simple(anthems::ss_conn &&c)
-:conn(std::forward<ss_conn>(c)){
-
-}
-simple::~simple() {
-    conn->close();
 }
 
 }//anthems

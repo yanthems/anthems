@@ -11,76 +11,63 @@
 #include "safe_queue.hpp"
 
 #include <thread_pool.hpp>
+#include <thread>
 #include <future>
 #include <chrono>
 
-int handle(anthems::ss_conn&& conn,const std::string&host,const std::string&port) {
-    anthems::tcp_client client;
-    auto cipher=anthems::cipher("aes-256-cfb","test23334");
-
-
-    auto create_cipconn=[&](anthems::bytes&&helloData){
-//        auto [shost,sport]=anthems::sockv5::parse_addr(helloData);
-//        if(shost.empty()||sport.empty()){
-//            throw std::logic_error("host or port is empty");
-//        }
-        auto mcip=cipher;
-        auto cip_c=anthems::cipher_conn(client.connect(host,port),std::move(mcip));
-        cip_c.write(helloData);
-        return cip_c;
-    };
-
+void handle(anthems::ss_conn &&conn, const std::string &host, const std::string &port) {
     try {
-        auto s5=anthems::sockv5(std::forward<anthems::ss_conn>(conn));
-        auto cip_c=create_cipconn(s5.get_request());
-        auto f1=std::async([&](){
-            return anthems::ss_conn::pipe_then_close(s5.get(),cip_c,"local say:");
+        anthems::tcp_client client;
+        auto cipher = anthems::cipher("aes-256-cfb", "test23334");
+        auto s5 = anthems::sockv5(std::forward<anthems::ss_conn>(conn));
+
+        //复制加密方式
+        auto mcip = cipher;
+        anthems::ss_conn c;
+        try {
+            //链接服务器
+            c = client.connect(host, port);
+        } catch (const std::exception &e) {
+            anthems::log(e.what());
+            //失败关闭sockv5
+            s5.close_write();
+            return;
+        }
+        //创建加密链接
+        auto cip_c = anthems::cipher_conn(std::move(c), std::move(mcip));
+        //写入请求
+        auto req=s5.get_request();
+        cip_c.write(req);
+
+        auto f1 = std::async([&]() {
+            return anthems::pipe_then_close(s5, cip_c, "local say:");
         });
-        anthems::ss_conn::pipe_then_close(cip_c,s5.get(),"remote say:");
+        anthems::pipe_then_close(cip_c, s5, "remote say:");
+
         anthems::log("local count=", f1.get());
-        anthems::log("==try close cipher conn==");
-        cip_c->close();
-    }catch (const std::exception&e){
+        anthems::log("====try close cipher conn=====");
+    } catch (const std::exception &e) {
         anthems::log(e.what());
     }
-
-    return 0;
 }
 void listen(const std::string&port) {
 
     anthems::tcp_server server(port, anthems::tcpv4);
     thread_pool tp(4);
-
-    safe_queue<std::future<int>> res;
-
-
+    std::vector<std::future<void>> ts;
     try {
-        std::thread t1([&]() {
-            while (true) {
-                auto conn = server.accept();
-                anthems::log("push");
-#if 0
-                res.push(tp.add(handle,
-                               std::move(conn),
-                               "127.0.0.1",
-                               "1088"));
-#else
-        handle(std::move(conn),"127.0.0.1","23334");
-#endif
-            }
-        });
         while (true) {
-            anthems::log("get");
-            res.pop_front().wait_for(std::chrono::seconds(30));
+            auto conn = server.accept();
+//                handle(std::move(conn),"127.0.0.1","23334");
+            ts.emplace_back(std::async(handle,std::move(conn), "127.0.0.1", "23334"));
         }
-        t1.join();
     } catch (const std::exception &e) {
         anthems::log(e.what());
     }
 
 }
 
-int main(){
-
+int main() {
     listen("1088");
 }
+

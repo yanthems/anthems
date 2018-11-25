@@ -31,6 +31,8 @@ using udp_q=asio::ip::udp::resolver::query;
 using asio_socket_raw=asio::ip::tcp::socket;
 using asio_socket=std::shared_ptr<asio_socket_raw>;
 
+using error=std::error_code;
+
 #if __cplusplus>201703L
 inline static auto tcpv4 = asio::ip::tcp::v4();
 #else
@@ -45,34 +47,34 @@ class ss_conn : public asio_socket {
 public:
     static const constexpr auto Block=bytes::Large_Block;
 public:
-    ss_conn(asio::io_service &io);
+    explicit ss_conn(asio::io_service &io);
 
-    ss_conn(){}
+    ss_conn()= default;
     
-    void read_over(){
-        anthems::log(__func__);
-        (*this)->shutdown((*this)->shutdown_receive);
+    void close_write() {
+        try {
+            (*this)->shutdown((*this)-> shutdown_send);
+        }catch (const std::exception&e){
+            anthems::log(e.what());
+        }
     }
-    void write_over(){
-        anthems::log(__func__);
-        (*this)->shutdown((*this)->shutdown_send);
+    void close_read() {
+        try {
+            (*this)->shutdown((*this)-> shutdown_receive);
+        }catch (const std::exception&e){
+            anthems::log(e.what());
+        }
     }
-    
-    virtual anthems::bytes read(std::size_t n);
 
-    virtual std::tuple<anthems::bytes,std::size_t> read_length(std::size_t n);
+    anthems::bytes read_all(std::size_t n);
+    void write_all(anthems::bytes&data);
 
-    virtual anthems::bytes read_enough(std::size_t n);
+    virtual std::size_t read( anthems::bytes& buf);
+    virtual std::size_t write( anthems::bytes &buf);
 
-    virtual std::size_t write(const anthems::bytes &data);
-
-    static std::size_t pipe_then_close(ss_conn &src, ss_conn &dst, const std::string &debug_name = "debug");
-
-#if 0
-//    virtual anthems::bytes read(std::size_t n, asio::error_code &err);
-//    virtual std::size_t write(const anthems::bytes &data, asio::error_code &err);
-//    static std::size_t bib_then_close(ss_conn&src,ss_conn&dst);
-#endif
 };
+
+size_t pipe_then_close(anthems::ss_conn &src, anthems::ss_conn &dst, const std::string &debug_name);
+
 }
 #endif // !ANTHEMS_SSCONN_HPP

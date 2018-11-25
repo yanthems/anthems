@@ -25,7 +25,7 @@ public:
 
     bytes(std::size_t t);
 
-    bytes();
+    bytes()= default;
 
     bytes& cover(const bytes&data,std::size_t begin=0);
 
