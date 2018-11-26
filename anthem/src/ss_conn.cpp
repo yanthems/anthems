@@ -49,33 +49,43 @@ std::size_t ss_conn::write( anthems::bytes &data) {
     return (*this)->send(buf);
 }
 
-size_t pipe_then_close(anthems::ss_conn &src, anthems::ss_conn &dst, const std::string &debug_name) {
-
+//@test http://pewpewpew.work/images/logo.gifs
+size_t pipe_then_close(const anthems::ss_conn &c_src, const anthems::ss_conn &c_dst, const std::string &debug_name) {
+    auto src=const_cast<anthems::ss_conn&>(c_src);
+    auto dst=const_cast<anthems::ss_conn&>(c_dst);
     anthems::Debug(TIME,debug_name);
     size_t len = 0;
     auto read_eof=false;
     while (!read_eof) {
         anthems::bytes buf(ss_conn::Block);
+        size_t l=0;
         try {
-            anthems::Debug(TIME,debug_name, "======start read======>");
-            auto l=src.read(buf);
-            anthems::Debug(TIME,debug_name, "======read======>", l);
-        } catch (const std::error_code &err) {
-            anthems::Debug(TIME,debug_name,err.message());
+            anthems::Debug(TIME,debug_name, "======start read======>",l);
+             l=src.read(buf);
+            anthems::Debug(TIME,debug_name, "read======>", buf.size(),l);
+        } catch (const std::exception &e) {
+            anthems::Debug(POS,TIME,debug_name,e.what());
             read_eof=true;
         }
         try {
-            anthems::Debug(TIME,debug_name, "======start write======>");
-            len += dst.write(buf);
+            buf.resize(l);
+            anthems::Debug("==>",buf,"<==");
+            anthems::Debug(TIME,debug_name, "======start write======>",l);
+            if(!buf.empty()) {
+                l = dst.write(buf);
+            }
+            len +=l;
+            anthems::Debug(TIME,debug_name, "write======>", buf.size(),l);
             if(read_eof) {
+                anthems::Debug(POS,TIME,"try close write");
                 dst.close_write();
                 break;
             }
-        } catch (const std::error_code &err) {
-            anthems::Debug(TIME,debug_name,err.message());
+        } catch (const std::exception &e) {
+            anthems::Debug(POS,TIME,debug_name,e.what());
             break;
         }
-        anthems::Debug(TIME,debug_name, "======write======>", buf.size());
+        anthems::Debug(TIME,debug_name, "======total======>",len);
     }
     return len;
 }

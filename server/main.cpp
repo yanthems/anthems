@@ -16,30 +16,36 @@
 #include <thread_pool.hpp>
 #include <thread>
 
-void handle(anthems::cipher_conn&& cip_c,anthems::tcp_client&client) {
+void handle(anthems::cipher_conn&& cip_c,const anthems::tcp_client&const_client) {
+    auto client= const_cast<anthems::tcp_client&>(const_client);
     try {
         //读取加密请求
         auto[host, port]=cip_c.parse_addr();
 
         //尝试连接请求服务器
         try {
-            auto remote = std::move(client.connect(host, port));
-            auto f1 = std::async([&]() {
-                return anthems::pipe_then_close(cip_c, remote, "local say");
-            });
-            anthems::pipe_then_close(remote, cip_c, "server say");
-            anthems::Debug(POS,TIME,"local count=", f1.get());
-
+            auto remote = client.connect(host, port);
+            std::future<std::size_t>f1,f2;
+            f1 = std::async(anthems::pipe_then_close,cip_c, remote, "local say");
+            f2 = std::async(anthems::pipe_then_close,remote, cip_c, "server say");
+            try {
+                anthems::Debug(POS,TIME,"local count=", f1.get());
+            }catch (const std::exception &e) {
+                anthems::Warning(TIME, e.what());
+            }
+            try {
+                anthems::Debug(POS,TIME,"server count=", f2.get());
+            }catch (const std::exception &e) {
+                anthems::Warning(TIME, e.what());
+            }
             anthems::Debug(POS,TIME,"====try close cipher conn=====");
-
         } catch (const std::exception &e) {
             anthems::Debug(POS,TIME,e.what());
-            //失败关闭加密连接
-            cip_c.close_read();
             return;
         }
     } catch (const std::exception &e) {
         anthems::Debug(POS,TIME,e.what());
+        //失败关闭加密连接
     }
 }
 void proxy(const std::string&port) {
