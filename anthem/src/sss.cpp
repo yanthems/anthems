@@ -20,6 +20,7 @@ tcp_server::tcp_server(const std::string &port,asio::ip::tcp ver) {
 ss_conn tcp_server::accept() {
     auto conn = ss_conn(*m_serv);
     m_acp->accept(*conn);
+    anthems::Debug(POS,TIME,"accept!");
     return conn;
 }
 

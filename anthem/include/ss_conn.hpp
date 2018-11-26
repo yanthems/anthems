@@ -49,20 +49,21 @@ public:
 public:
     explicit ss_conn(asio::io_service &io);
 
-    ss_conn()= default;
-    
+    ss_conn(ss_conn&&)= default;
+    ss_conn&operator=(ss_conn&&)= default;
+
     void close_write() {
         try {
             (*this)->shutdown((*this)-> shutdown_send);
         }catch (const std::exception&e){
-            anthems::log(e.what());
+            anthems::Debug(POS,TIME,e.what());
         }
     }
     void close_read() {
         try {
             (*this)->shutdown((*this)-> shutdown_receive);
         }catch (const std::exception&e){
-            anthems::log(e.what());
+            anthems::Debug(POS,TIME,e.what());
         }
     }
 

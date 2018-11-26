@@ -11,7 +11,6 @@ class sockv5:public ss_conn{
     using super=ss_conn;
 public:
     sockv5(ss_conn&&c);
-    ~sockv5();
     bytes get_request(){
         return rawreq;
     }
@@ -23,6 +22,7 @@ public:
     static const unsigned int ReqMax=259;
     //1 type | 1 len | 1 min | 2 port
     static const unsigned int ReqMin=5;
+    void init();
 private:
     void hand_shake();
     void do_parse();

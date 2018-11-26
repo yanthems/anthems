@@ -5,13 +5,14 @@
 namespace anthems {
 tcp_client::tcp_client() {
     m_serv =std::make_shared<asio_s_raw>();
-    
+    m_solver=std::make_shared<tcp_r_raw>(*m_serv);
+}
+tcp_client::~tcp_client() {
 }
 
 ss_conn tcp_client::connect(const anthems::tcp_q &query) {
     
-    tcp_r_raw resolver(*m_serv);
-    auto ran = resolver.resolve(query);
+    auto ran = m_solver->resolve(query);
     int count=0;
     for(auto &i:ran){
         anthems::log("count =",count++,i.endpoint().address(),i.endpoint().port());

@@ -14,9 +14,9 @@ const constexpr std::size_t ToEnd = std::size_t(-1);
 class bytes : public std::vector<byte> {
     using super = std::vector<byte>;
 public:
-    static const constexpr std::size_t Middle_Block = 1024;
-    static const constexpr std::size_t Small_Block = 512;
-    static const constexpr std::size_t Large_Block = 2048;
+    static const constexpr std::size_t Middle_Block = 2048;
+    static const constexpr std::size_t Small_Block = 1024;
+    static const constexpr std::size_t Large_Block = 4096;
     static const constexpr std::size_t Block_Size = Middle_Block;
 
     bytes(const std::string &str);

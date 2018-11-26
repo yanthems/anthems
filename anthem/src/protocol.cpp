@@ -5,11 +5,17 @@ namespace anthems{
 
 sockv5::sockv5(anthems::ss_conn &&c)
 :super(std::forward<ss_conn>(c)) {
-    hand_shake();
-    do_request();
-    do_response();
+
 }
-sockv5::~sockv5() {
+void sockv5::init() {
+    try {
+        hand_shake();
+        do_request();
+        do_response();
+    }catch (const std::exception&e){
+        anthems::Debug(POS,TIME,e.what());
+        throw std::logic_error("init socket v5 failed");
+    }
 }
 void sockv5::hand_shake(){
     /* request
