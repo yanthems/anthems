@@ -24,7 +24,7 @@ void sockv5::hand_shake(){
 |	1byte	1byte		1byte		|
 -------------------------------------
 */
-    log(__func__);
+    Debug(TIME,__func__);
     auto res = super::read_all(3);
     anthems::bytes data;
     if (res[0] != 0x05) {
@@ -49,7 +49,7 @@ void sockv5::hand_shake(){
                 // 0x03 ~ 0x7F IANA allocation
                 // 0x80 ~ 0xFE private method
             case 0xff: {
-                anthems::log("no method");
+                anthems::Warning("no method");
                 throw std::logic_error("un support socket method");
             }
         }
@@ -65,7 +65,7 @@ void sockv5::do_request(){
 -------------------------------------------------------------
 */
 // 1 + 1 + 1 + 1 + (1+255) + 2
-    log(__func__);
+    Debug(TIME,__func__);
     auto res = super::read_all(3);
     if(res[0]!=0x05){
         throw std::logic_error("not socksV5");
@@ -76,7 +76,7 @@ void sockv5::do_request(){
     do_parse();
 }
 void sockv5::do_response(){
-    log(__func__);
+    Debug(TIME,__func__);
     auto rsp=anthems::bytes(10);
     //socket version
     rsp[0]=0x05;
@@ -110,7 +110,7 @@ static const constexpr auto typeDM   = 0x03; // type is domain address
 static const constexpr auto typeIPv6 = 0x04; // type is ipv6 address
 void sockv5::do_parse() {
     rawreq=do_parse(*this);
-    anthems::log("request =>",rawreq,"<=");
+    anthems::Debug("request =>",rawreq,"<=");
 }
 bytes sockv5::do_parse(anthems::ss_conn &c) {
     using bc=anthems::ss_conn;
@@ -184,7 +184,7 @@ std::tuple<std::string,std::string> sockv5::parse_addr(anthems::bytes& req){
         default:
             throw std::logic_error("un support type address: ");
     }
-    anthems::log("socksv5 req len=",req.size(),"host=>",host,"<=","port=>",port,"<=");
+    anthems::Debug("socksv5 req len=",req.size(),"host=>",host,"<=","port=>",port,"<=");
     return std::make_tuple(host,port);
 }
 

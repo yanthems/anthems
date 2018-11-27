@@ -15,7 +15,7 @@ ss_conn tcp_client::connect(const anthems::tcp_q &query) {
     auto ran = m_solver->resolve(query);
     int count=0;
     for(auto &i:ran){
-        anthems::log("count =",count++,i.endpoint().address(),i.endpoint().port());
+        anthems::Debug("count =",count++,i.endpoint().address(),i.endpoint().port());
     }
     if (ran.size() == 0) {
         throw std::logic_error("unknown address");

@@ -14,7 +14,7 @@ ss_conn::ss_conn(asio::io_service &io)
     try {
         ptr->close();
     }catch (const std::exception&e){
-        anthems::Warning(TIME,e.what());
+        anthems::Warning(POS,TIME,e.what());
     }
 })){
 }
@@ -69,7 +69,7 @@ size_t pipe_then_close(const anthems::ss_conn &c_src, const anthems::ss_conn &c_
         }
         try {
             buf.resize(l);
-            anthems::Debug("==>",buf,"<==");
+//            anthems::Debug("==>",buf,"<==");
             anthems::Debug(TIME,debug_name, "======start write======>",l);
             if(!buf.empty()) {
                 l = dst.write(buf);

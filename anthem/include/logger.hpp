@@ -18,8 +18,15 @@ inline void log(T &&t, Args &&... args) {
     anthems::log(std::forward<Args>(args)...);
 }
 
-
+#if LOG_LEVEL >=3
 static inline constexpr int LogLevel=3;
+#else
+#if LOG_LEVEL>=2
+static inline constexpr int LogLevel=2;
+#else
+static inline constexpr int LogLevel=1;
+#endif
+#endif
 
 static inline const int DebugLevel=3;
 static inline const int WarningLevel=2;
@@ -43,8 +50,6 @@ inline void Error(Args &&... args) {
         anthems::log("[ERROR]",std::forward<Args>(args)...);
     }
 }
-
-
 
 }
 #endif //ANTHEMS_LOGGER_HPP
