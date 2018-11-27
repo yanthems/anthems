@@ -56,7 +56,7 @@ std::size_t ss_conn::write( anthems::bytes &data) {
 size_t pipe_then_close(const anthems::ss_conn &c_src, const anthems::ss_conn &c_dst, const std::string &debug_name) {
     auto src=const_cast<anthems::ss_conn&>(c_src);
     auto dst=const_cast<anthems::ss_conn&>(c_dst);
-    anthems::Debug(TIME,debug_name);
+    anthems::Debug(POS,TIME,debug_name);
     size_t len = 0;
     bool readerr=false;
     while (true) {

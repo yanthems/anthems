@@ -50,10 +50,12 @@ void handle(anthems::cipher_conn&& cip_c,const anthems::tcp_client&const_client)
                 anthems::Warning(TIME, e.what());
             }
             anthems::Debug(POS,TIME,"====try close cipher conn=====");
+            isClosed=true;
         } catch (const std::exception &e) {
             anthems::Debug(POS,TIME,e.what());
             return;
         }
+
     } catch (const std::exception &e) {
         anthems::Debug(POS,TIME,e.what());
         //失败关闭加密连接
