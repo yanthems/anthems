@@ -52,7 +52,7 @@ public:
     void close_write() {
         try {
             (*this)->shutdown((*this)-> shutdown_send);
-            anthems::Debug(POS,TIME,__func__);
+//            anthems::Debug(POS,TIME,__func__);
         }catch (const std::exception&e){
             anthems::Debug(POS,TIME,e.what());
         }
@@ -60,7 +60,7 @@ public:
     void close_both(){
         try {
             (*this)->shutdown((*this)-> shutdown_both);
-            anthems::Debug(POS,TIME,__func__);
+//            anthems::Debug(POS,TIME,__func__);
         }catch (const std::exception&e){
             anthems::Debug(POS,TIME,e.what());
         }
@@ -68,13 +68,12 @@ public:
     void close_read() {
         try {
             (*this)->shutdown((*this)-> shutdown_receive);
-            anthems::Debug(POS,TIME,__func__);
+//            anthems::Debug(POS,TIME,__func__);
         }catch (const std::exception&e){
             anthems::Debug(POS,TIME,e.what());
         }
     }
     void close(){
-        close_both();
         try {
             (*this)->close();
             anthems::Debug(POS,TIME,__func__);

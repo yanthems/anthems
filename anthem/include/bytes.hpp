@@ -19,7 +19,7 @@ public:
 //    static const constexpr std::size_t Large_Block = 8192;
 
     //2 + 10 + 4096
-    static const constexpr std::size_t Block_Size = 4108;
+    static const constexpr std::size_t Block_Size = 4096;
 
     bytes(const std::string &str);
 

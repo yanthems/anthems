@@ -10,7 +10,7 @@ namespace anthems {
 ss_conn::ss_conn(asio::io_service &io)
 //        : super(std::move(std::make_shared<asio_socket_raw>(io))) {
 :super (std::shared_ptr<asio_socket_raw>(new asio_socket_raw(io),[](asio_socket_raw*ptr){
-    anthems::Debug(TIME,"close socket ?");
+//    anthems::Debug(TIME,"close socket ?");
 //    try {
 //        ptr->close();
 //    }catch (const std::exception&e){
@@ -56,7 +56,7 @@ std::size_t ss_conn::write( anthems::bytes &data) {
 size_t pipe_then_close(const anthems::ss_conn &c_src, const anthems::ss_conn &c_dst, const std::string &debug_name) {
     auto src=const_cast<anthems::ss_conn&>(c_src);
     auto dst=const_cast<anthems::ss_conn&>(c_dst);
-    anthems::Debug(POS,TIME,debug_name);
+//    anthems::Debug(POS,TIME,debug_name);
     size_t len = 0;
     bool readerr=false;
     while (true) {
@@ -67,7 +67,7 @@ size_t pipe_then_close(const anthems::ss_conn &c_src, const anthems::ss_conn &c_
              l=src.read(buf);
 //            anthems::Debug(TIME,debug_name, "read======>>>",l);
         } catch (const std::exception &e) {
-            anthems::Debug(POS,TIME,debug_name,e.what());
+//            anthems::Debug(POS,TIME,debug_name,e.what());
             readerr=true;
         }
         try {
@@ -83,7 +83,8 @@ size_t pipe_then_close(const anthems::ss_conn &c_src, const anthems::ss_conn &c_
                 throw std::logic_error("read socket error");
             }
         } catch (const std::exception &e) {
-            anthems::Debug(POS,TIME,debug_name,e.what());
+//            anthems::Debug(POS,TIME,debug_name,e.what());
+            dst.close_write();
             dst.close();
             break;
         }

@@ -22,7 +22,7 @@ void handle(anthems::ss_conn &&conn,const anthems::tcp_client& client) {
     anthems::Debug(POS, TIME, __func__);
     auto rc_client = const_cast<anthems::tcp_client &>(client);
     auto host = std::string("127.0.0.1");
-    host=std::string("ss3.fuckneusoft.com");
+//    host=std::string("ss3.fuckneusoft.com");
     auto port = std::string("12345");
     auto cipher = anthems::cipher("aes-256-cfb", "test");
     try {
@@ -33,7 +33,8 @@ void handle(anthems::ss_conn &&conn,const anthems::tcp_client& client) {
         anthems::sockv5 s5 = anthems::sockv5(std::forward<anthems::ss_conn>(conn));
         anthems::defer d1{[&](){
             if(!isClosed) {
-                anthems::log(POS,"close s5");
+                anthems::log(POS,"[close s5]");
+                s5.close_both();
                 s5.close();
             }
         }};
@@ -45,7 +46,8 @@ void handle(anthems::ss_conn &&conn,const anthems::tcp_client& client) {
         auto cip_c = anthems::cipher_conn(std::move(c), std::move(mcip));
         anthems::defer d2{[&](){
             if(!isClosed) {
-                anthems::log(POS,"close cip");
+                anthems::log(POS,"[close cip]");
+                cip_c.close_both();
                 cip_c.close();
             }
         }};
@@ -54,9 +56,9 @@ void handle(anthems::ss_conn &&conn,const anthems::tcp_client& client) {
         std::future<std::size_t>f1,f2;
         f1 = std::async(anthems::pipe_then_close,s5, cip_c, "local say");
         f2 = std::async(anthems::pipe_then_close,cip_c, s5, "server say");
-        anthems::Debug("local count=", f1.get());
-        anthems::Debug("server count=", f2.get());
-        anthems::Debug("====try close cipher conn=====");
+        anthems::Debug(POS,TIME,"local count=", f1.get());
+        anthems::Debug(POS,TIME,"server count=", f2.get());
+        anthems::Debug(POS,TIME,"====try close cipher conn=====");
         isClosed=true;
     } catch (const std::exception &e) {
         anthems::Debug(POS, TIME, e.what());

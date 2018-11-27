@@ -23,7 +23,8 @@ void handle(anthems::cipher_conn&& cip_c,const anthems::tcp_client&const_client)
         //读取加密请求
         anthems::defer d1{[&]() {
             if (!isClosed) {
-                anthems::Debug(POS,"close cip");
+                anthems::Debug(POS,"[close cip]");
+                cip_c.close_both();
                 cip_c.close();
             }
         }};
@@ -33,7 +34,8 @@ void handle(anthems::cipher_conn&& cip_c,const anthems::tcp_client&const_client)
         auto remote = client.connect(host, port);
         anthems::defer d2{[&]() {
             if (!isClosed) {
-                anthems::Debug(POS,"close remote");
+                anthems::Debug(POS,"[close remote]");
+                remote.close_both();
                 remote.close();
             }
         }};
