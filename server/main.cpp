@@ -49,10 +49,11 @@ void handle(anthems::cipher_conn&& cip_c,const anthems::tcp_client&const_client)
     }
 }
 void proxy(const std::string&port,const std::string&method,const std::string&pass) {
+    anthems::Debug(POS, TIME, __func__);
     auto server = anthems::tcp_server(port, anthems::tcpv4);
     auto client = anthems::tcp_client();
-
     auto cipher = anthems::cipher(method, pass);
+
     std::vector<std::future<void>>ts;
     try {
         while (true) {
