@@ -8,7 +8,7 @@
 #include <iomanip>
 #include <string>
 #include <sstream>
-
+#include <functional>
 namespace anthems{
 
 #define LINE2STR(x) #x
@@ -31,6 +31,21 @@ public:
     static time_t get_now_t();
     static time_init* get();
     std::string get_now_format(const std::string&format);
+};
+
+template <typename F>
+class defer final{
+private:
+    std::function<void(void)>deleter;
+public:
+    defer(F&&f){
+        deleter=[ff=std::forward<F>(f)](){
+            ff();
+        };
+    }
+    ~defer(){
+        deleter();
+    }
 };
 
 }

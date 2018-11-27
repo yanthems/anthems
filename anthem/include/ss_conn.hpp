@@ -75,7 +75,7 @@ public:
     }
 
     anthems::bytes read_all(std::size_t n);
-    void write_all(anthems::bytes&data);
+    std::size_t write_all(anthems::bytes&data);
 
     virtual std::size_t read( anthems::bytes& buf);
     virtual std::size_t write( anthems::bytes &buf);

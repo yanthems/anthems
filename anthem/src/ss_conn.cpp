@@ -29,14 +29,15 @@ anthems::bytes ss_conn::read_all(std::size_t n) {
     }while (res.size()<n);
     return res;
 }
-void ss_conn::write_all(anthems::bytes &data) {
+std::size_t ss_conn::write_all(anthems::bytes &data) {
     std::size_t l=0,r=data.size();
     while (r){
         auto buf=asio::buffer(data.data()+l,r);
-        auto len=(*this)->write_some(buf);
+        auto len=(*this)->send(buf);
         l+=len;
         r-=len;
     }
+    return l;
 }
 
 std::size_t ss_conn::read( anthems::bytes& data) {
@@ -45,6 +46,8 @@ std::size_t ss_conn::read( anthems::bytes& data) {
 }
 
 std::size_t ss_conn::write( anthems::bytes &data) {
+    return write_all(data);
+
     auto buf =asio::buffer(data.data(),data.size());
     return (*this)->send(buf);
 }
@@ -55,37 +58,36 @@ size_t pipe_then_close(const anthems::ss_conn &c_src, const anthems::ss_conn &c_
     auto dst=const_cast<anthems::ss_conn&>(c_dst);
     anthems::Debug(TIME,debug_name);
     size_t len = 0;
-    auto read_eof=false;
-    while (!read_eof) {
+    bool readerr=false;
+    while (true) {
         anthems::bytes buf(ss_conn::Block);
         size_t l=0;
         try {
-            anthems::Debug(TIME,debug_name, "======start read======>",l);
+//            anthems::Debug(TIME,debug_name, "======start read======>",l);
              l=src.read(buf);
-            anthems::Debug(TIME,debug_name, "read======>", buf.size(),l);
+            anthems::Debug(TIME,debug_name, "read======>>>",l);
         } catch (const std::exception &e) {
             anthems::Debug(POS,TIME,debug_name,e.what());
-            read_eof=true;
+            readerr=true;
         }
         try {
-            buf.resize(l);
 //            anthems::Debug("==>",buf,"<==");
-            anthems::Debug(TIME,debug_name, "======start write======>",l);
-            if(!buf.empty()) {
+//            anthems::Debug(TIME,debug_name, "======start write======>",l);
+            if(l) {
+                buf.resize(l);
                 l = dst.write(buf);
+                len +=l;
             }
-            len +=l;
-            anthems::Debug(TIME,debug_name, "write======>", buf.size(),l);
-            if(read_eof) {
-                anthems::Debug(POS,TIME,"try close write");
-                dst.close_write();
-                break;
+            anthems::Debug(TIME,debug_name, l,"<<<======write",);
+            if(readerr){
+                throw std::logic_error("read socket error");
             }
         } catch (const std::exception &e) {
             anthems::Debug(POS,TIME,debug_name,e.what());
+            dst.close_write();
             break;
         }
-        anthems::Debug(TIME,debug_name, "======total======>",len);
+        anthems::Debug(TIME,debug_name, "<============total=========>",len);
     }
     return len;
 }
