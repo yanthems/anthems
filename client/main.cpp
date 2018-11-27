@@ -15,6 +15,9 @@
 #include <future>
 #include <chrono>
 
+//un support
+//https://www.gstatic.com/og/_/js/k=og.og2.en_US.ZMe_WxpNhwk.O/rt=j/m=drt,def/exm=in,fot/d=1/ed=1/rs=AA2YrTujvSasDy0loAQWKMWHJLx-fNDIuA
+//
 void handle(anthems::ss_conn &&conn,const anthems::tcp_client& client) {
     anthems::Debug(POS, TIME, __func__);
     auto rc_client = const_cast<anthems::tcp_client &>(client);
