@@ -33,46 +33,29 @@ void handle(anthems::ss_conn &&conn,const anthems::tcp_client& client) {
         anthems::sockv5 s5 = anthems::sockv5(std::forward<anthems::ss_conn>(conn));
         anthems::defer d1{[&](){
             if(!isClosed) {
+                anthems::log(POS,"close s5");
                 s5.close();
             }
         }};
-        try {
-            //初始化链接
-            s5.init();
-        } catch (const std::exception &e) {
-            anthems::Debug(POS, TIME, e.what());
-            //初始化失败
-            return;
-        }
+        //初始化链接
+        s5.init();
         //链接服务器
         auto c = std::move(rc_client.connect(host, port));
         //创建加密链接
         auto cip_c = anthems::cipher_conn(std::move(c), std::move(mcip));
         anthems::defer d2{[&](){
             if(!isClosed) {
+                anthems::log(POS,"close cip");
                 cip_c.close();
             }
         }};
-        try {
-            //写入请求
-            auto req = s5.get_request();
-            cip_c.write(req);
-        } catch (const std::exception &e) {
-            anthems::Debug(POS, TIME, e.what());
-        }
+        auto req = s5.get_request();
+        cip_c.write(req);
         std::future<std::size_t>f1,f2;
         f1 = std::async(anthems::pipe_then_close,s5, cip_c, "local say");
         f2 = std::async(anthems::pipe_then_close,cip_c, s5, "server say");
-        try {
-            anthems::Debug("local count=", f1.get());
-        }catch (const std::exception &e) {
-            anthems::Warning(POS,TIME, e.what());
-        }
-        try {
-            anthems::Debug("server count=", f2.get());
-        }catch (const std::exception &e) {
-            anthems::Warning(POS,TIME, e.what());
-        }
+        anthems::Debug("local count=", f1.get());
+        anthems::Debug("server count=", f2.get());
         anthems::Debug("====try close cipher conn=====");
         isClosed=true;
     } catch (const std::exception &e) {
