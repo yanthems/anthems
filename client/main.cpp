@@ -21,7 +21,7 @@ void handle(anthems::ss_conn &&conn,const anthems::tcp_client& client) {
     auto host = std::string("127.0.0.1");
 //    host=std::string("ss2.fuckneusoft.com");
     auto port = std::string("23334");
-    auto cipher = anthems::cipher("aes-256-cfb", "test23334");
+    auto cipher = anthems::cipher("aes-256-cfb", "test");
     try {
         //复制加密方式
         auto mcip = cipher;
