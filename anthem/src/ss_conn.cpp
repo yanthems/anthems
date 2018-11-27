@@ -65,7 +65,7 @@ size_t pipe_then_close(const anthems::ss_conn &c_src, const anthems::ss_conn &c_
         try {
 //            anthems::Debug(TIME,debug_name, "======start read======>",l);
              l=src.read(buf);
-            anthems::Debug(TIME,debug_name, "read======>>>",l);
+//            anthems::Debug(TIME,debug_name, "read======>>>",l);
         } catch (const std::exception &e) {
             anthems::Debug(POS,TIME,debug_name,e.what());
             readerr=true;
@@ -78,7 +78,7 @@ size_t pipe_then_close(const anthems::ss_conn &c_src, const anthems::ss_conn &c_
                 l = dst.write(buf);
                 len +=l;
             }
-            anthems::Debug(TIME,debug_name, l,"<<<======write");
+//            anthems::Debug(TIME,debug_name, l,"<<<======write");
             if(readerr){
                 throw std::logic_error("read socket error");
             }
@@ -87,8 +87,9 @@ size_t pipe_then_close(const anthems::ss_conn &c_src, const anthems::ss_conn &c_
             dst.close();
             break;
         }
-        anthems::Debug(TIME,debug_name, "<============total=========>",len);
+//        anthems::Debug(TIME,debug_name, "<============total=========>",len);
     }
+    anthems::Debug(POS,TIME,debug_name, "[total]",len);
     return len;
 }
 
