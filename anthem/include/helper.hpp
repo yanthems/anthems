@@ -23,7 +23,15 @@ public:
     static std::string get_time_str();
     static std::time_t get_time_t();
 };
-
+class time_init{
+private:
+    time_init();
+    static inline time_init* ptr=nullptr;
+public:
+    static time_t get_now_t();
+    static time_init* get();
+    std::string get_now_format(const std::string&format);
+};
 
 }
 
