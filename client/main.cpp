@@ -28,28 +28,36 @@ void handle(anthems::ss_conn &&conn,const anthems::tcp_client& client) {
     try {
         //复制加密方式
         auto mcip = cipher;
+        bool isClosed=false;
         //转为sockv5协议
         anthems::sockv5 s5 = anthems::sockv5(std::forward<anthems::ss_conn>(conn));
-
+        anthems::defer d1{[&](){
+            if(!isClosed) {
+                s5.close();
+            }
+        }};
         try {
             //初始化链接
             s5.init();
         } catch (const std::exception &e) {
             anthems::Debug(POS, TIME, e.what());
             //初始化失败
-            s5.close_write();
             return;
         }
         //链接服务器
         auto c = std::move(rc_client.connect(host, port));
         //创建加密链接
         auto cip_c = anthems::cipher_conn(std::move(c), std::move(mcip));
-        //写入请求
+        anthems::defer d2{[&](){
+            if(!isClosed) {
+                cip_c.close();
+            }
+        }};
         try {
+            //写入请求
             auto req = s5.get_request();
             cip_c.write(req);
         } catch (const std::exception &e) {
-            s5.close_write();
             anthems::Debug(POS, TIME, e.what());
         }
         std::future<std::size_t>f1,f2;
@@ -66,7 +74,7 @@ void handle(anthems::ss_conn &&conn,const anthems::tcp_client& client) {
             anthems::Warning(POS,TIME, e.what());
         }
         anthems::Debug("====try close cipher conn=====");
-
+        isClosed=true;
     } catch (const std::exception &e) {
         anthems::Debug(POS, TIME, e.what());
     }
@@ -76,23 +84,23 @@ void listen(const std::string&port) {
     anthems::Debug(POS, TIME, "listen port:", port);
     anthems::tcp_client client;
 //    thread_pool tp(4);
-//    safe_queue<std::future<void>> ts;
-    std::vector<std::future<void>> ts;
-//    std::thread t1([&](){
-//        while(true){
-//            ts.pop_front().get();
-//        }
-//    });
+    safe_queue<std::future<void>> ts;
+//    std::vector<std::future<void>> ts;
+    std::thread t1([&](){
+        while(true){
+            ts.pop_front().get();
+        }
+    });
     while (true) {
         try {
             auto conn = server.accept();
-            ts.emplace_back(std::async(handle, std::move(conn), client));
+            ts.push(std::async(handle, std::move(conn), client));
         } catch (const std::exception &e) {
             anthems::Debug(POS, TIME, e.what());
         }
     }
 
-//    t1.join();
+    t1.join();
 }
 
 int main() {

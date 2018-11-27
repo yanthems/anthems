@@ -45,13 +45,21 @@ const auto udpv6 = asio::ip::udp::v6();
 class ss_conn : public asio_socket {
     using super=asio_socket;
 public:
-    static const constexpr auto Block=bytes::Large_Block;
+    static const constexpr auto Block=bytes::Block_Size;
 public:
     explicit ss_conn(asio::io_service &io);
 
     void close_write() {
         try {
             (*this)->shutdown((*this)-> shutdown_send);
+            anthems::Debug(POS,TIME,__func__);
+        }catch (const std::exception&e){
+            anthems::Debug(POS,TIME,e.what());
+        }
+    }
+    void close_both(){
+        try {
+            (*this)->shutdown((*this)-> shutdown_both);
             anthems::Debug(POS,TIME,__func__);
         }catch (const std::exception&e){
             anthems::Debug(POS,TIME,e.what());
@@ -66,6 +74,7 @@ public:
         }
     }
     void close(){
+        close_both();
         try {
             (*this)->close();
             anthems::Debug(POS,TIME,__func__);

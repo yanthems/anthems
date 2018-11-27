@@ -4,7 +4,7 @@
 
 #include <queue>
 #include <mutex>
-
+#include <condition_variable>
 template <typename T>
 class safe_queue final{
 private:
@@ -13,7 +13,7 @@ private:
     std::mutex ml;
     std::condition_variable cv;
 public:
-    explicit safe_queue(){}
+    explicit safe_queue()= default;
     safe_queue(const safe_queue&)= delete;
     safe_queue(safe_queue&&)= default;
     safe_queue&operator=(const safe_queue&)= delete;

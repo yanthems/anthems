@@ -18,8 +18,8 @@ public:
     static std::tuple<std::string,std::string>parse_addr(bytes& req);
     static bytes do_parse(ss_conn&c);
 public:
-    //1 type | 1 len | 255 max | 2 port 
-    static const unsigned int ReqMax=259;
+    //1 type | 1 len | 255 max | 2 port | 10
+    static const unsigned int ReqMax=259 + 10;
     //1 type | 1 len | 1 min | 2 port
     static const unsigned int ReqMin=5;
     void init();

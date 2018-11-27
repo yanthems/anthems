@@ -54,20 +54,23 @@ void proxy(const std::string&port,const std::string&method,const std::string&pas
     auto client = anthems::tcp_client();
     auto cipher = anthems::cipher(method, pass);
 
-    std::vector<std::future<void>>ts;
+//    std::vector<std::future<void>>ts;
+    safe_queue<std::future<void>>ts;
+    std::thread t1([&](){
+        while(true){
+            ts.pop_front().get();
+        }
+    });
     try {
         while (true) {
             auto cip = cipher;
             auto cip_c=anthems::cipher_conn(server.accept(), std::move(cip));
-            ts.emplace_back(std::async(handle,
-                                       std::move(cip_c),
-                                       client));
+            ts.push(std::async(handle,std::move(cip_c),client));
         }
-
     } catch (const std::exception &e) {
         anthems::Debug(POS,TIME,e.what());
     }
-
+    t1.join();
 }
 int main(int argc,char*argv[]) {
     auto parse=[&](const char* arg)->std::string{
