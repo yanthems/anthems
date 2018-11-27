@@ -78,7 +78,7 @@ size_t pipe_then_close(const anthems::ss_conn &c_src, const anthems::ss_conn &c_
                 l = dst.write(buf);
                 len +=l;
             }
-            anthems::Debug(TIME,debug_name, l,"<<<======write",);
+            anthems::Debug(TIME,debug_name, l,"<<<======write");
             if(readerr){
                 throw std::logic_error("read socket error");
             }

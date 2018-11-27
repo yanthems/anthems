@@ -22,7 +22,7 @@ void handle(anthems::ss_conn &&conn,const anthems::tcp_client& client) {
     anthems::Debug(POS, TIME, __func__);
     auto rc_client = const_cast<anthems::tcp_client &>(client);
     auto host = std::string("127.0.0.1");
-//    host=std::string("ss3.fuckneusoft.com");
+    host=std::string("ss3.fuckneusoft.com");
     auto port = std::string("12345");
     auto cipher = anthems::cipher("aes-256-cfb", "test");
     try {
