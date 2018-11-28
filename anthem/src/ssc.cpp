@@ -18,12 +18,12 @@ ss_conn tcp_client::connect(const anthems::tcp_q &query) {
     for (auto &i:ran) {
         anthems::Debug("address =", count++, i.endpoint().address(), i.endpoint().port());
         //选择ipv4
-        if (i.endpoint().protocol() == tcpv4) {
+//        if (i.endpoint().protocol() == tcpv4) {
             //connect the first
             sock->connect(i);
             isConn = true;
             break;
-        }
+//        }
     }
     if (isConn) {
         return sock;
