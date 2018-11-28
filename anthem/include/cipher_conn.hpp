@@ -11,14 +11,9 @@ class cipher_conn:public ss_conn{
     using super=ss_conn;
 
 public:
-    cipher_conn(ss_conn&&c,const std::string&method,const std::string&password);
-    cipher_conn(ss_conn&&con,cipher&& cip);
+    cipher_conn(ss_conn c,const std::string&method,const std::string&password);
+    cipher_conn(ss_conn con,cipher&& cip);
     cipher_conn(asio::io_service &io,cipher&&cip);
-
-    cipher_conn(const cipher_conn&)= default;
-    cipher_conn(cipher_conn&&)= default;
-    cipher_conn&operator=(const cipher_conn&)=default;
-    cipher_conn&operator=(cipher_conn&&)=default;
 
      std::size_t read(anthems::bytes& buf)override;
      std::size_t write(anthems::bytes &buf)override;

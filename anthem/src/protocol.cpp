@@ -4,7 +4,7 @@
 namespace anthems{
 
 
-bytes sockv5::hand_shake(anthems::ss_conn &c){
+bytes sockv5::hand_shake(anthems::ss_conn c){
     /* request
 -------------------------------------
 |	VER		NMETHODS	METHODS		|
@@ -45,7 +45,7 @@ bytes sockv5::hand_shake(anthems::ss_conn &c){
     return do_request(c);
 }
 
-bytes sockv5::do_request(anthems::ss_conn &c){
+bytes sockv5::do_request(anthems::ss_conn c){
     /* request
 -------------------------------------------------------------
 |	VER		CMD		RSV		ATYP	DST.ADDR	DST.PORT	|
@@ -67,7 +67,7 @@ static const constexpr auto typeIPv4 = 0x01; // type is ipv4 address
 static const constexpr auto typeDM   = 0x03; // type is domain address
 static const constexpr auto typeIPv6 = 0x04; // type is ipv6 address
 
-bytes sockv5::do_parse(anthems::ss_conn &c) {
+bytes sockv5::do_parse(anthems::ss_conn c) {
     const constexpr auto  IPv4len = 4;
     auto DMlen=0;//dynamic
     const constexpr auto  IPv6len = 16;
@@ -98,7 +98,7 @@ bytes sockv5::do_parse(anthems::ss_conn &c) {
     do_response(c);
     return req;
 }
-void sockv5::do_response(anthems::ss_conn &c){
+void sockv5::do_response(anthems::ss_conn c){
     Debug(TIME,__func__);
     auto rsp=anthems::bytes(10);
     //socket version

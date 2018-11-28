@@ -10,50 +10,27 @@
 #include "protocol.hpp"
 #include "helper.hpp"
 
-#include "ThreadPool.h"
-
 #include <future>
 #include <ssc.hpp>
 #include <helper.hpp>
 #include <thread_pool.hpp>
 #include <thread>
 
-void handle(anthems::cipher_conn&& cip_c,const anthems::tcp_client&const_client) {
+void handle(anthems::cipher_conn cip_c,const anthems::tcp_client&const_client) {
     auto client = const_cast<anthems::tcp_client &>(const_client);
-    bool isClosed = false;
     try {
         //读取加密请求
-        anthems::defer d1{[&]() {
-            if (!isClosed) {
-                anthems::Debug(POS, "[close cip]");
-                cip_c.close_both();
-                cip_c.close();
-            }
-        }};
         auto[host, port]=cip_c.parse_addr();
 
         //尝试连接请求服务器
-        anthems::ss_conn remote;
-        try {
-            remote = client.connect(host, port);
-        }catch (const std::exception&e){
-            anthems::Debug(POS,TIME,e.what());
-            return;
-        }
-        anthems::defer d2{[&]() {
-            if (!isClosed) {
-                anthems::Debug(POS, "[close remote]");
-                remote.close_both();
-                remote.close();
-            }
-        }};
+
+        auto remote = client.connect(host, port);
         std::future<std::size_t> f1, f2;
         f1 = std::async(anthems::pipe_then_close, cip_c, remote, "local say");
         f2 = std::async(anthems::pipe_then_close, remote, cip_c, "server say");
         anthems::Debug(POS, TIME, "local count=", f1.get());
         anthems::Debug(POS, TIME, "server count=", f2.get());
         anthems::Debug(POS, TIME, "====try close cipher conn=====");
-        isClosed = true;
     } catch (const std::exception &e) {
         anthems::Debug(POS, TIME, e.what());
     }
@@ -65,13 +42,17 @@ void proxy(const std::string&port,const std::string&method,const std::string&pas
     auto cipher = anthems::cipher(method, pass);
 
     thread_pool tp(4);
-    ThreadPool TP(4);
     while (true) {
         auto cip = cipher;
-        auto cip_c = anthems::cipher_conn(server.accept(), std::move(cip));
-//        handle(std::move(cip_c),client);
-//        tp.add(handle, std::move(cip_c), client);
-        TP.add(handle, std::move(cip_c), client);
+        anthems::ss_conn conn;
+        try {
+            conn = server.accept();
+        } catch (const std::exception &e) {
+            anthems::Debug(POS, TIME, e.what());
+            continue;
+        }
+        auto cip_c = anthems::cipher_conn(conn, std::move(cip));
+        tp.add(handle, cip_c, client);
     }
 }
 int main(int argc,char*argv[]) {

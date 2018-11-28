@@ -49,10 +49,6 @@ public:
 public:
     explicit ss_conn(asio::io_service &io);
     ss_conn()= default;
-    ss_conn(ss_conn&&)= default;
-    ss_conn&operator=(ss_conn&&)= default;
-    ss_conn(const ss_conn&)= default;
-    ss_conn&operator=(const ss_conn&)= default;
     void close_write() {
         try {
             (*this)->shutdown((*this)-> shutdown_send);
@@ -94,7 +90,7 @@ public:
 
 };
 
-size_t pipe_then_close(const anthems::ss_conn &src,const anthems::ss_conn &dst, const std::string &debug_name);
+size_t pipe_then_close( anthems::ss_conn src, anthems::ss_conn dst, const std::string &debug_name);
 
 }
 #endif // !ANTHEMS_SSCONN_HPP

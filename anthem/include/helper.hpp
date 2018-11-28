@@ -39,8 +39,8 @@ private:
     std::function<void(void)>deleter;
 public:
     defer(F&&f){
-        deleter=[ff=std::forward<F>(f)](){
-            ff();
+        deleter=[&](){
+            f();
         };
     }
     ~defer(){

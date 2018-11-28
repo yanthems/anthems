@@ -8,15 +8,23 @@
 namespace anthems {
 
 ss_conn::ss_conn(asio::io_service &io)
-//        : super(std::move(std::make_shared<asio_socket_raw>(io))) {
+//        : super(std::make_shared<asio_socket_raw>(io)) {
+
 :super (std::shared_ptr<asio_socket_raw>(new asio_socket_raw(io),[](asio_socket_raw*ptr){
-//    anthems::Debug(TIME,"close socket ?");
-//    try {
-//        ptr->close();
-//    }catch (const std::exception&e){
-//        anthems::Warning(POS,TIME,e.what());
-//    }
+    anthems::Debug(TIME,"close socket ?");
+    try {
+        ptr->shutdown(ptr->shutdown_both);
+    }catch (const std::exception&e){
+        anthems::Warning(POS,TIME,e.what());
+    }
+    try {
+        ptr->close();
+    }catch (const std::exception&e){
+        anthems::Warning(POS,TIME,e.what());
+    }
 })){
+
+
 }
 
 anthems::bytes ss_conn::read_all(std::size_t n) {
@@ -53,17 +61,11 @@ std::size_t ss_conn::write( anthems::bytes &data) {
 }
 
 //@test http://pewpewpew.work/images/logo.gifs
-size_t pipe_then_close(const anthems::ss_conn &c_src, const anthems::ss_conn &c_dst, const std::string &debug_name) {
-    auto src=const_cast<anthems::ss_conn&>(c_src);
-    auto dst=const_cast<anthems::ss_conn&>(c_dst);
+size_t pipe_then_close(anthems::ss_conn src, anthems::ss_conn dst, const std::string &debug_name) {
 //    anthems::Debug(POS,TIME,debug_name);
     size_t len = 0;
     bool readerr=false;
-    anthems::defer defer1{[&](){
-        Debug(POS,TIME,"[close both]");
-        dst.close_both();
-        dst.close();
-    }};
+
     while (!readerr) {
         anthems::bytes buf(ss_conn::Block);
         size_t l=0;

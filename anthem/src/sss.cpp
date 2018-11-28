@@ -8,7 +8,7 @@
 
 namespace anthems {
 
-tcp_server::tcp_server(const std::string &port,asio::ip::tcp ver) {
+tcp_server::tcp_server(const std::string &port, asio::ip::tcp ver) {
 
     m_serv = std::make_shared<asio::io_service>();
     auto uiport = std::stoi(port);
@@ -20,20 +20,20 @@ tcp_server::tcp_server(const std::string &port,asio::ip::tcp ver) {
 ss_conn tcp_server::accept() {
     auto conn = ss_conn(*m_serv);
     m_acp->accept(*conn);
-    anthems::Debug(POS,TIME,"=========accept!=========");
+    anthems::Debug(POS, TIME, "=========accept!=========");
     return conn;
 }
 
 udp_server::udp_server(const std::string &host, const std::string &port, asio::ip::udp ver) {
 
-    auto m_serv=std::make_shared<asio::io_service>();
+    auto m_serv = std::make_shared<asio::io_service>();
     auto uiport = std::stoi(port);
 
-    auto m_ep=asio::ip::udp::endpoint(ver,uiport);
+    auto m_ep = asio::ip::udp::endpoint(ver, uiport);
 
     asio::ip::udp::resolver res(*m_serv);
 
-    auto rt=res.resolve(m_ep);
+    auto rt = res.resolve(m_ep);
 
 
 }

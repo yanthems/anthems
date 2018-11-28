@@ -5,13 +5,13 @@
 namespace anthems{
 
 
-cipher_conn::cipher_conn(anthems::ss_conn &&c, const std::string &method, const std::string &password)
+cipher_conn::cipher_conn(anthems::ss_conn c, const std::string &method, const std::string &password)
 :super(std::forward<ss_conn>(c)),
  m_cipher(method,password){
 
 }
 
-cipher_conn::cipher_conn(anthems::ss_conn &&con, anthems::cipher &&cip)
+cipher_conn::cipher_conn(anthems::ss_conn con, anthems::cipher &&cip)
 :super (std::forward<ss_conn>(con)),
 m_cipher(std::forward<cipher>(cip)){
 
