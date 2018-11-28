@@ -24,7 +24,7 @@ void handle(anthems::ss_conn conn,const anthems::tcp_client& c_client) {
     anthems::Debug(POS, TIME, __func__);
     auto client = const_cast<anthems::tcp_client &>(c_client);
     auto host = std::string("127.0.0.1");
-//    host = std::string("ss3.fuckneusoft.com");
+    host = std::string("ss3.fuckneusoft.com");
     auto port = std::string("12345");
     auto cipher = anthems::cipher("aes-256-cfb", "test");
 //复制加密方式
@@ -36,12 +36,12 @@ void handle(anthems::ss_conn conn,const anthems::tcp_client& c_client) {
         auto cip_c = anthems::cipher_conn(other, std::move(mcip));
         auto req = anthems::sockv5::hand_shake(conn);
         //初始化链接
+        anthems::Debug(POS,TIME,"write request");
         cip_c.write(req);
-        std::future<std::size_t> f1, f2;
-        f1 = std::async(anthems::pipe_then_close, conn, cip_c, "local say");
-        f2 = std::async(anthems::pipe_then_close, cip_c, conn, "server say");
+        auto f1 = std::async(anthems::pipe_then_close, conn, cip_c, "local say");
+        anthems::pipe_then_close( cip_c, conn, "server say");
         anthems::Debug(POS, TIME, "local count=", f1.get());
-        anthems::Debug(POS, TIME, "server count=", f2.get());
+
         anthems::Debug(POS, TIME, "====try close cipher conn=====");
     } catch (const std::exception &e) {
         anthems::Debug(POS, TIME, e.what());
