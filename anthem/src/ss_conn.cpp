@@ -94,7 +94,8 @@ size_t pipe_then_close(anthems::ss_conn src, anthems::ss_conn dst, const std::st
 //        anthems::Debug(TIME,debug_name, "<============total=========>",len);
     }
     anthems::Debug(POS,TIME,debug_name, "[total]",len);
-    dst.close();
+    dst.close_write();
+//    dst.close();
     return len;
 }
 

@@ -16,7 +16,7 @@ public:
     cipher_conn(asio::io_service &io,cipher&&cip);
 
      std::size_t read(anthems::bytes& buf)override;
-     std::size_t write(anthems::bytes &buf)override;
+     std::size_t write(anthems::bytes& buf)override;
 
     std::tuple<std::string,std::string>parse_addr();
 

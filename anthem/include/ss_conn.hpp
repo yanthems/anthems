@@ -48,7 +48,6 @@ public:
     static const constexpr auto Block=bytes::Block_Size;
 public:
     explicit ss_conn(asio::io_service &io);
-    ss_conn()= default;
     void close_write() {
         try {
             (*this)->shutdown((*this)-> shutdown_send);

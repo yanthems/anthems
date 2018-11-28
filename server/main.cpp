@@ -40,15 +40,14 @@ void proxy(const std::string&port,const std::string&method,const std::string&pas
     thread_pool tp(100);
     while (true) {
         auto cip = cipher;
-        anthems::ss_conn conn;
         try {
-            conn = server.accept();
+            auto cip_c = anthems::cipher_conn(server.accept(), std::move(cip));
+            tp.add(handle, cip_c, client);
         } catch (const std::exception &e) {
             anthems::Debug(POS, TIME, e.what());
             continue;
         }
-        auto cip_c = anthems::cipher_conn(conn, std::move(cip));
-        tp.add(handle, cip_c, client);
+
     }
 }
 int main(int argc,char*argv[]) {

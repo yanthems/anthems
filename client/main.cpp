@@ -24,16 +24,15 @@ void handle(anthems::ss_conn conn,const anthems::tcp_client& c_client) {
     anthems::Debug(POS, TIME, __func__);
     auto client = const_cast<anthems::tcp_client &>(c_client);
     auto host = std::string("127.0.0.1");
-    host = std::string("ss3.fuckneusoft.com");
+//    host = std::string("ss3.fuckneusoft.com");
     auto port = std::string("12345");
     auto cipher = anthems::cipher("aes-256-cfb", "test");
 //复制加密方式
     auto mcip = cipher;
 
-    auto other = client.connect(host, port);
     try {
         //创建加密链接
-        auto cip_c = anthems::cipher_conn(other, std::move(mcip));
+        auto cip_c = anthems::cipher_conn(client.connect(host, port), std::move(mcip));
         auto req = anthems::sockv5::hand_shake(conn);
         //初始化链接
         anthems::Debug(POS,TIME,"write request");
@@ -55,14 +54,12 @@ void listen(const std::string&lport) {
 
 
     while (true) {
-        anthems::ss_conn conn;
         try {
-            conn = server.accept();
+            tp.add(handle, server.accept(), client);
         } catch (const std::exception &e) {
             anthems::Debug(POS, TIME, e.what());
             continue;
         }
-        tp.add(handle, conn, client);
     }
 
 }
