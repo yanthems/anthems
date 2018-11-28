@@ -59,7 +59,12 @@ size_t pipe_then_close(const anthems::ss_conn &c_src, const anthems::ss_conn &c_
 //    anthems::Debug(POS,TIME,debug_name);
     size_t len = 0;
     bool readerr=false;
-    while (true) {
+    anthems::defer defer1{[&](){
+        Debug(POS,TIME,"[close both]");
+        dst.close_both();
+        dst.close();
+    }};
+    while (!readerr) {
         anthems::bytes buf(ss_conn::Block);
         size_t l=0;
         try {
@@ -79,13 +84,9 @@ size_t pipe_then_close(const anthems::ss_conn &c_src, const anthems::ss_conn &c_
                 len +=l;
             }
 //            anthems::Debug(TIME,debug_name, l,"<<<======write");
-            if(readerr){
-                throw std::logic_error("read socket error");
-            }
+
         } catch (const std::exception &e) {
 //            anthems::Debug(POS,TIME,debug_name,e.what());
-            dst.close_write();
-            dst.close();
             break;
         }
 //        anthems::Debug(TIME,debug_name, "<============total=========>",len);

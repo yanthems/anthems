@@ -15,6 +15,10 @@ public:
     cipher_conn(ss_conn&&con,cipher&& cip);
     cipher_conn(asio::io_service &io,cipher&&cip);
 
+    cipher_conn(const cipher_conn&)= default;
+    cipher_conn(cipher_conn&&)= default;
+    cipher_conn&operator=(const cipher_conn&)=default;
+    cipher_conn&operator=(cipher_conn&&)=default;
 
      std::size_t read(anthems::bytes& buf)override;
      std::size_t write(anthems::bytes &buf)override;

@@ -13,16 +13,27 @@ tcp_client::~tcp_client() {
 ss_conn tcp_client::connect(const anthems::tcp_q &query) {
     auto ran = m_solver->resolve(query);
     int count=0;
+    auto sock = ss_conn(*m_serv);
+    bool isConn=false;
     for(auto &i:ran){
         anthems::Debug("address =",count++,i.endpoint().address(),i.endpoint().port());
         //选择ipv4
         if(i.endpoint().protocol()==tcpv4){
-            auto sock = ss_conn(*m_serv);
             //connect the first
-            sock->connect(i);
-            return sock;
+            try {
+                sock->connect(i);
+                isConn=true;
+                break;
+            }catch (const std::exception&e){
+                Warning(POS,TIME,e.what());
+                continue;
+            }
         }
     }
+    if(isConn){
+        return sock;
+    }
+    sock.close();
     throw std::domain_error("can't find address");
 }
 

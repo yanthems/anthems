@@ -3,21 +3,8 @@
 #include "logger.hpp"
 namespace anthems{
 
-sockv5::sockv5(anthems::ss_conn &&c)
-:super(std::forward<ss_conn>(c)) {
 
-}
-void sockv5::init() {
-    try {
-        hand_shake();
-        do_request();
-        do_response();
-    }catch (const std::exception&e){
-        anthems::Debug(POS,TIME,e.what());
-        throw std::logic_error("init socket v5 failed");
-    }
-}
-void sockv5::hand_shake(){
+bytes sockv5::hand_shake(anthems::ss_conn &c){
     /* request
 -------------------------------------
 |	VER		NMETHODS	METHODS		|
@@ -25,7 +12,7 @@ void sockv5::hand_shake(){
 -------------------------------------
 */
     Debug(TIME,__func__);
-    auto res = super::read_all(3);
+    auto res = c.read_all(3);
     anthems::bytes data;
     if (res[0] != 0x05) {
         throw std::logic_error("not socksV5");
@@ -54,10 +41,11 @@ void sockv5::hand_shake(){
             }
         }
     }
-    super::write_all(data);
+    c.write_all(data);
+    return do_request(c);
 }
 
-void sockv5::do_request(){
+bytes sockv5::do_request(anthems::ss_conn &c){
     /* request
 -------------------------------------------------------------
 |	VER		CMD		RSV		ATYP	DST.ADDR	DST.PORT	|
@@ -66,16 +54,51 @@ void sockv5::do_request(){
 */
 // 1 + 1 + 1 + 1 + (1+255) + 2
     Debug(TIME,__func__);
-    auto res = super::read_all(3);
+    auto res = c.read_all(3);
     if(res[0]!=0x05){
         throw std::logic_error("not socksV5");
     }
     if(res[1]!=0x01){
         throw std::logic_error("socks command not supported");
     }
-    do_parse();
+    return do_parse(c);
 }
-void sockv5::do_response(){
+static const constexpr auto typeIPv4 = 0x01; // type is ipv4 address
+static const constexpr auto typeDM   = 0x03; // type is domain address
+static const constexpr auto typeIPv6 = 0x04; // type is ipv6 address
+
+bytes sockv5::do_parse(anthems::ss_conn &c) {
+    const constexpr auto  IPv4len = 4;
+    auto DMlen=0;//dynamic
+    const constexpr auto  IPv6len = 16;
+    const constexpr auto PortLen=2;
+    size_t len=0;
+    auto typeAddr=c.read_all(1);
+    bytes dm;
+    switch (typeAddr[0]){
+        case typeIPv4: {
+            len += IPv4len;
+        }
+            break;
+        case typeIPv6: {
+            len += IPv6len;
+        }
+            break;
+        case typeDM:{
+            dm=c.read_all(1);
+            DMlen=dm[0];
+            len+=DMlen;
+        }
+            break;
+        default:
+            throw std::logic_error("un support socket address type");
+    }
+    len+=PortLen;
+    auto req=typeAddr+dm+c.read_all(len);
+    do_response(c);
+    return req;
+}
+void sockv5::do_response(anthems::ss_conn &c){
     Debug(TIME,__func__);
     auto rsp=anthems::bytes(10);
     //socket version
@@ -103,45 +126,9 @@ void sockv5::do_response(){
     rsp[4]= rsp[5]= rsp[6]=rsp[7] = 0x00;
     //bind port
     rsp[8]=0x00,rsp[9]=0x00;
-    super::write_all(rsp);
+    c.write_all(rsp);
 }
-static const constexpr auto typeIPv4 = 0x01; // type is ipv4 address
-static const constexpr auto typeDM   = 0x03; // type is domain address
-static const constexpr auto typeIPv6 = 0x04; // type is ipv6 address
-void sockv5::do_parse() {
-    rawreq=do_parse(*this);
-    anthems::Debug("request =>",rawreq,"<=");
-}
-bytes sockv5::do_parse(anthems::ss_conn &c) {
-    using bc=anthems::ss_conn;
-    const constexpr auto  IPv4len = 4;
-    auto DMlen=0;//dynamic
-    const constexpr auto  IPv6len = 16;
-    const constexpr auto PortLen=2;
-    size_t len=0;
-    auto typeAddr=c.bc::read_all(1);
-    bytes dm;
-    switch (typeAddr[0]){
-        case typeIPv4: {
-            len += IPv4len;
-        }
-            break;
-        case typeIPv6: {
-            len += IPv6len;
-        }
-            break;
-        case typeDM:{
-            dm=c.bc::read_all(1);
-            DMlen=dm[0];
-            len+=DMlen;
-        }
-            break;
-        default:
-            throw std::logic_error("un support socket address type");
-    }
-    len+=PortLen;
-    return typeAddr+dm+c.bc::read_all(len);
-}
+
 std::tuple<std::string,std::string> sockv5::parse_addr(anthems::bytes& req){
 
     const constexpr auto  IPv4len = 4;

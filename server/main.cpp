@@ -10,6 +10,8 @@
 #include "protocol.hpp"
 #include "helper.hpp"
 
+#include "ThreadPool.h"
+
 #include <future>
 #include <ssc.hpp>
 #include <helper.hpp>
@@ -23,7 +25,7 @@ void handle(anthems::cipher_conn&& cip_c,const anthems::tcp_client&const_client)
         //读取加密请求
         anthems::defer d1{[&]() {
             if (!isClosed) {
-                anthems::Debug(POS,"[close cip]");
+                anthems::Debug(POS, "[close cip]");
                 cip_c.close_both();
                 cip_c.close();
             }
@@ -31,10 +33,16 @@ void handle(anthems::cipher_conn&& cip_c,const anthems::tcp_client&const_client)
         auto[host, port]=cip_c.parse_addr();
 
         //尝试连接请求服务器
-        auto remote = client.connect(host, port);
+        anthems::ss_conn remote;
+        try {
+            remote = client.connect(host, port);
+        }catch (const std::exception&e){
+            anthems::Debug(POS,TIME,e.what());
+            return;
+        }
         anthems::defer d2{[&]() {
             if (!isClosed) {
-                anthems::Debug(POS,"[close remote]");
+                anthems::Debug(POS, "[close remote]");
                 remote.close_both();
                 remote.close();
             }
@@ -56,63 +64,54 @@ void proxy(const std::string&port,const std::string&method,const std::string&pas
     auto client = anthems::tcp_client();
     auto cipher = anthems::cipher(method, pass);
 
-//    std::vector<std::future<void>>ts;
-    safe_queue<std::future<void>>ts;
-    std::thread t1([&](){
-        while(true){
-            ts.pop_front().get();
-        }
-    });
-    try {
-        while (true) {
-            auto cip = cipher;
-            auto cip_c=anthems::cipher_conn(server.accept(), std::move(cip));
-            ts.push(std::async(handle,std::move(cip_c),client));
-        }
-    } catch (const std::exception &e) {
-        anthems::Debug(POS,TIME,e.what());
+    thread_pool tp(4);
+    ThreadPool TP(4);
+    while (true) {
+        auto cip = cipher;
+        auto cip_c = anthems::cipher_conn(server.accept(), std::move(cip));
+//        handle(std::move(cip_c),client);
+//        tp.add(handle, std::move(cip_c), client);
+        TP.add(handle, std::move(cip_c), client);
     }
-    t1.join();
 }
 int main(int argc,char*argv[]) {
-    auto parse=[&](const char* arg)->std::string{
-        for(auto i=1;i<argc;i++){
-            if(std::strcmp(argv[i],arg)==0){
-                if(i+1<argc){
-                    return std::string(argv[i+1]);
+    auto parse = [&](const char *arg) -> std::string {
+        for (auto i = 1; i < argc; i++) {
+            if (std::strcmp(argv[i], arg) == 0) {
+                if (i + 1 < argc) {
+                    return std::string(argv[i + 1]);
                 }
             }
         }
         return std::string{};
     };
-    auto parse_port=[&](){
-        auto port=parse("-p");
-        if(port.empty()){
-            port=std::string{"12345"};
+    auto parse_port = [&]() {
+        auto port = parse("-p");
+        if (port.empty()) {
+            port = std::string{"12345"};
         }
         return port;
     };
-    auto parse_method=[&](){
-        auto method=parse("-m");
-        if(method.empty()){
-            method=std::string{"aes-256-cfb"};
+    auto parse_method = [&]() {
+        auto method = parse("-m");
+        if (method.empty()) {
+            method = std::string{"aes-256-cfb"};
         }
         return method;
     };
 
-    auto parse_password=[&](){
-        auto pass=parse("-k");
-        if(pass.empty()){
-            pass=std::string("test");
+    auto parse_password = [&]() {
+        auto pass = parse("-k");
+        if (pass.empty()) {
+            pass = std::string("test");
         }
         return pass;
     };
 
 
-
-    auto port=parse_port();
-    auto method=parse_method();
-    auto pass=parse_password();
-    proxy(port,method,pass);
+    auto port = parse_port();
+    auto method = parse_method();
+    auto pass = parse_password();
+    proxy(port, method, pass);
     return 0;
 }

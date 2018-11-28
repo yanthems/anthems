@@ -7,30 +7,20 @@
 
 namespace anthems{
 
-class sockv5:public ss_conn{
-    using super=ss_conn;
+class sockv5{
 public:
-    sockv5(ss_conn&&c);
-    bytes get_request(){
-        return rawreq;
-    }
 public:
     static std::tuple<std::string,std::string>parse_addr(bytes& req);
-    static bytes do_parse(ss_conn&c);
+    static bytes hand_shake(anthems::ss_conn &);
+
 public:
     //1 type | 1 len | 255 max | 2 port | 10
     static const unsigned int ReqMax=259;
-    //1 type | 1 len | 1 min | 2 port
-    static const unsigned int ReqMin=5;
-    void init();
 private:
-    void hand_shake();
-    void do_parse();
-    void do_request();
-    void do_response();
+    static bytes do_parse(anthems::ss_conn &);
+    static bytes do_request(anthems::ss_conn &);
+    static void do_response(anthems::ss_conn &);
 
-private:
-    bytes rawreq;
 };
 
 
