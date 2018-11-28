@@ -6,13 +6,13 @@ namespace anthems{
 
 
 cipher_conn::cipher_conn(anthems::ss_conn c, const std::string &method, const std::string &password)
-:super(std::forward<ss_conn>(c)),
+:super(c),
  m_cipher(method,password){
 
 }
 
-cipher_conn::cipher_conn(anthems::ss_conn con, anthems::cipher &&cip)
-:super (std::forward<ss_conn>(con)),
+cipher_conn::cipher_conn(anthems::ss_conn c, anthems::cipher &&cip)
+:super (c),
 m_cipher(std::forward<cipher>(cip)){
 
 }

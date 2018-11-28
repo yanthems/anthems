@@ -21,9 +21,7 @@ void handle(anthems::cipher_conn cip_c,const anthems::tcp_client&const_client) {
     try {
         //读取加密请求
         auto[host, port]=cip_c.parse_addr();
-
         //尝试连接请求服务器
-
         auto remote = client.connect(host, port);
         std::future<std::size_t> f1, f2;
         f1 = std::async(anthems::pipe_then_close, cip_c, remote, "local say");

@@ -13,10 +13,10 @@ public:
         for (size_t i = 0; i < capacity; i++) {
             m_threads.emplace_back([&]() -> void {
                 for (;;) {
-                    std::function<void()> task;
+                    std::function<void(void)>task;
                     {
                         std::unique_lock<std::mutex> ulock(m_lock);
-                        m_notify.wait(ulock, [this] {
+                        m_notify.wait(ulock, [this]() {
                             return m_stop || !m_tasks.empty();
                         });
                         if (m_stop && m_tasks.empty())
@@ -31,32 +31,19 @@ public:
     }
     template<typename F, typename... Args>
     auto add(F &&f, Args &&... args) noexcept {
-#if __cplusplus>=201703L
         using r=std::invoke_result_t<F, Args...>;
-#else
-        using r = std::result_of_t<F(Args...)>;
-#endif
-          auto task_pack_ptr = std::make_shared<std::packaged_task<r(void)>>(
-                  [&]() -> r {
-#if __cplusplus >= 201703L
-                      return std::invoke(std::forward<F>(f), std::forward<Args>(args)...);
-#else
-                      return f(std::forward<Args>(args)...);
-#endif
-                  }
-            );
+        auto tmp=std::make_tuple(std::forward<Args>(args)...);
+        auto fff=[&,t=std::move(tmp)]()->r{
+            return std::apply(std::forward<F>(f),t);
+        };
+        auto task_pack_ptr = std::make_shared<std::packaged_task<r(void)>>(fff);
         auto result = task_pack_ptr->get_future();
         {
             std::unique_lock<std::mutex> ulock(m_lock);
-            if (m_stop)
-                return std::async(std::launch::async, [&]() {
-#if __cplusplus>=201703L
-                    return std::invoke(std::forward<F>(f), std::forward<Args>(args)...);
-#else
-                    return f(std::forward<Args>(args)...);
-#endif
-                });
-            m_tasks.emplace([f=std::move(task_pack_ptr)]() { (*f)(); });
+            if (m_stop) {
+                return std::async(std::forward<F>(f), std::forward<Args>(args)...);
+            }
+            m_tasks.emplace([=]() { (*task_pack_ptr)(); });
         }
         m_notify.notify_one();
         return result;
