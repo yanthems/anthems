@@ -51,7 +51,7 @@ void listen(const std::string&lport) {
     anthems::tcp_server server(lport, anthems::tcpv4);
     anthems::Debug(POS, TIME, "listen port:", lport);
     anthems::tcp_client client;
-    thread_pool tp(4);
+    thread_pool tp(100);
 
 
     while (true) {
@@ -71,7 +71,6 @@ void listen(const std::string&lport) {
 
 
 int main() {
-
 
     listen("9999");
 }

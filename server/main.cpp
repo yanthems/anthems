@@ -39,7 +39,7 @@ void proxy(const std::string&port,const std::string&method,const std::string&pas
     auto client = anthems::tcp_client();
     auto cipher = anthems::cipher(method, pass);
 
-    thread_pool tp(4);
+    thread_pool tp(100);
     while (true) {
         auto cip = cipher;
         anthems::ss_conn conn;

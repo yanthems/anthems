@@ -11,16 +11,16 @@ ss_conn::ss_conn(asio::io_service &io)
 //        : super(std::make_shared<asio_socket_raw>(io)) {
 
 :super (std::shared_ptr<asio_socket_raw>(new asio_socket_raw(io),[](asio_socket_raw*ptr){
-    anthems::Debug(TIME,"close socket ?");
+    anthems::Debug(TIME,"share_ptr close socket");
     try {
         ptr->shutdown(ptr->shutdown_both);
     }catch (const std::exception&e){
-        anthems::Warning(POS,TIME,e.what());
+//        anthems::Warning(POS,TIME,e.what());
     }
     try {
         ptr->close();
     }catch (const std::exception&e){
-        anthems::Warning(POS,TIME,e.what());
+//        anthems::Warning(POS,TIME,e.what());
     }
 })){
 
@@ -94,6 +94,7 @@ size_t pipe_then_close(anthems::ss_conn src, anthems::ss_conn dst, const std::st
 //        anthems::Debug(TIME,debug_name, "<============total=========>",len);
     }
     anthems::Debug(POS,TIME,debug_name, "[total]",len);
+    dst.close();
     return len;
 }
 
