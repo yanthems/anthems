@@ -5,6 +5,12 @@
 #include "logger.hpp"
 
 #include <memory>
+
+#ifdef USE_LIBGO
+#include <libgo/libgo.h>
+#else
+
+#endif
 namespace anthems {
 
 ss_conn::ss_conn(asio::io_service &io)
@@ -64,10 +70,10 @@ std::size_t ss_conn::write( anthems::bytes &data) {
 size_t pipe_then_close(anthems::ss_conn src, anthems::ss_conn dst, const std::string &debug_name) {
 //    anthems::Debug(POS,TIME,debug_name);
     size_t len = 0;
-    bool readerr=false;
-
-    while (!readerr) {
+    size_t errCount=0;
+    while (errCount<32) {
         anthems::bytes buf(ss_conn::Block);
+        bool readerr=false;
         size_t l=0;
         try {
 //            anthems::Debug(TIME,debug_name, "======start read======>",l);
@@ -84,6 +90,15 @@ size_t pipe_then_close(anthems::ss_conn src, anthems::ss_conn dst, const std::st
                 buf.resize(l);
                 l = dst.write(buf);
                 len +=l;
+            }else{
+                errCount++;
+                //timeout
+#ifdef USE_LIBGO
+                co_sleep(250);
+#else
+                std::this_thread::sleep_for(std::chrono::milliseconds(250));
+
+#endif
             }
 //            anthems::Debug(TIME,debug_name, l,"<<<======write");
 
