@@ -18,15 +18,15 @@ set(ASIO_DIR ${CMAKE_CURRENT_SOURCE_DIR}/asio/asio CACHE STRING "asio dir")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lssl -lcrypto")
 
 if(USE_LIBGO)
-    set(CMAKE_CXX_FLAGS "-llibgo -ldl")
+    set(CMAKE_CXX_FLAGS "-llibgo -ldl ${CMAKE_CXX_FLAGS}")
 endif(USE_LIBGO)
 
 if (UNIX)
-set(CMAKE_CXX_FLAGS "-pthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 endif (UNIX)
 
 if(APPLE)
-    set(CMAKE_CXX_FLAGS "-lcrypto")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lcrypto")
 endif(APPLE)
 
 add_subdirectory ("anthem")
