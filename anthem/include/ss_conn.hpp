@@ -89,7 +89,7 @@ public:
 
 };
 
-size_t pipe_then_close( anthems::ss_conn src, anthems::ss_conn dst, const std::string &debug_name);
+size_t pipe_then_close( anthems::ss_conn src, anthems::ss_conn dst, const std::string &debug_name="debug");
 
 }
 #endif // !ANTHEMS_SSCONN_HPP
