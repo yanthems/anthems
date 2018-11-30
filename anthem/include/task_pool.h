@@ -1,10 +1,14 @@
-
-
 #ifndef TASK_POOL_H
 #define TASK_POOL_H
-
+#include <memory>
+#include <vector>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <future>
+#include <queue>
 struct task{
-    virtual void run(){};
+    virtual void run()=0;
 };
 
 class task_pool{

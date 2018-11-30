@@ -16,6 +16,8 @@
 #include <thread_pool.hpp>
 #include <thread>
 
+//#include <libgo/libgo.h>
+
 void handle(anthems::cipher_conn cip_c,const anthems::tcp_client&const_client) {
     auto client = const_cast<anthems::tcp_client &>(const_client);
     try {
@@ -43,6 +45,9 @@ void proxy(const std::string&port,const std::string&method,const std::string&pas
         try {
             auto cip_c = anthems::cipher_conn(server.accept(), std::move(cip));
             tp.add(handle, cip_c, client);
+//            go [=]{
+//                handle(cip_c,client);
+//            };
         } catch (const std::exception &e) {
             anthems::Debug(POS, TIME, e.what());
             continue;
@@ -83,7 +88,6 @@ int main(int argc,char*argv[]) {
         }
         return pass;
     };
-
 
     auto port = parse_port();
     auto method = parse_method();

@@ -1,5 +1,5 @@
-#ifndef THREAD_POOL
-#define THREAD_POOL
+#ifndef THREAD_POOL_H
+#define THREAD_POOL_H
 #include <functional>
 #include <future>
 #include <iostream>
@@ -71,4 +71,4 @@ public:
     thread_pool&operator=(thread_pool&&)= default;
 };
 
-#endif
+#endif //THREAD_POOL_H

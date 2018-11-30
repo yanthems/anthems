@@ -10,7 +10,6 @@
 #include "protocol.hpp"
 #include "safe_queue.hpp"
 
-
 #include <thread_pool.hpp>
 #include <thread>
 #include <future>
