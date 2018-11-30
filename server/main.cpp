@@ -16,8 +16,11 @@
 #include <thread_pool.hpp>
 #include <thread>
 
-//#include <libgo/libgo.h>
+#ifdef USE_LIBGO
+#include <libgo/libgo.h>
+#else
 
+#endif
 void handle(anthems::cipher_conn cip_c,const anthems::tcp_client&const_client) {
     auto client = const_cast<anthems::tcp_client &>(const_client);
     try {
@@ -25,9 +28,18 @@ void handle(anthems::cipher_conn cip_c,const anthems::tcp_client&const_client) {
         auto[host, port]=cip_c.parse_addr();
         //尝试连接请求服务器
         auto remote = client.connect(host, port);
+
+
+#ifdef USE_LIBGO
+        go [=](){
+            anthems::pipe_then_close(cip_c,remote,"local:");
+        };
+        anthems::pipe_then_close(remote,cip_c,"server:");
+#else
         auto f1 = std::async(anthems::pipe_then_close, cip_c, remote, "local say");
         anthems::pipe_then_close(remote, cip_c, "server say");
         anthems::Debug(POS, TIME, "local count=", f1.get());
+#endif
         anthems::Debug(POS, TIME, "====try close cipher conn=====");
     } catch (const std::exception &e) {
         anthems::Debug(POS, TIME, e.what());
@@ -39,15 +51,22 @@ void proxy(const std::string&port,const std::string&method,const std::string&pas
     auto client = anthems::tcp_client();
     auto cipher = anthems::cipher(method, pass);
 
+#ifdef USE_LIBGO
+
+#else
     thread_pool tp(100);
+#endif
     while (true) {
         auto cip = cipher;
         try {
             auto cip_c = anthems::cipher_conn(server.accept(), std::move(cip));
+#ifdef USE_LIBGO
+            go [=]{
+                handle(cip_c,client);
+            };
+#else
             tp.add(handle, cip_c, client);
-//            go [=]{
-//                handle(cip_c,client);
-//            };
+#endif
         } catch (const std::exception &e) {
             anthems::Debug(POS, TIME, e.what());
             continue;
@@ -92,6 +111,18 @@ int main(int argc,char*argv[]) {
     auto port = parse_port();
     auto method = parse_method();
     auto pass = parse_password();
-    proxy(port, method, pass);
+
+#ifdef USE_LIBGO
+    std::thread m{[&](){co_sched.Start(4);}};
+    m.detach();
+    go [&](){
+        proxy(port, method, pass);
+    };
+#else
+    std::async(proxy,port,method,pass);
+#endif
+    while (true){
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+    }
     return 0;
 }
