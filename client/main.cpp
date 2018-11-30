@@ -65,7 +65,7 @@ void listen(const std::string&lport) {
 #else
     thread_pool tp(100);
 #endif
-    
+
     while (true) {
         try {
             auto conn=server.accept();
@@ -89,6 +89,18 @@ void listen(const std::string&lport) {
 
 int main() {
 
-    listen("9999");
+#ifdef USE_LIBGO
+    std::thread m{[&](){co_sched.Start(4);}};
+    m.detach();
+    go [&](){
+        listen("9999");
+    };
+#else
+    std::async(listen,"9999");
+#endif
+
+    while (true){
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+    }
 }
 
